@@ -1,0 +1,17 @@
+version: '3.5'
+
+services:
+  nginx-php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: textformater_nginx_php
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/error.log:/var/log/nginx/error.log
+      - ./docker/nginx/access.log:/var/log/nginx/access.log
+    environment:
+      APP_ENV: development
+      ERRORS: 1
