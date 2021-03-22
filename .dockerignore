@@ -1,0 +1,6 @@
+/docker
+.gitignore
+.travis.yml
+docker-compose.yml
+Dockerfile
+LICENSE
