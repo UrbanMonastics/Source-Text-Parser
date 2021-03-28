@@ -1,4 +1,4 @@
-# TextFormater in PHP
+# Source Parser in PHP
 A Fast Markdown Parser extended for Liturgy in PHP. This is a formatting library for the specific styling and formats of the Source Texts available from Urban Monastics.  
   
 The source texts use a subset of the Markdown functionality, and include some additional features. To make these texts more approachable and useful to others we wanted to publish a library which makes formatting them simple and direct. This library is based upon [Parsedown](https://github.com/erusev/parsedown) by [Emanuil Rusev](http://erusev.com).  
@@ -15,7 +15,7 @@ The source texts use a subset of the Markdown functionality, and include some ad
 To ensure that we can support additional elements. These extensions are broken into inline or block level markings.
 
 ### Inline Extensions
-These can be placed anywhere within the texts.
+These can be placed anywhere within the texts. Since there are not standard ways for these to be implemented 
 
 *	\_underline\_		Make the encased text underlined (not supported by Github).  
 *	‾over line‾		Make the encased text over-lined. Only supported in HTML formatting. (not supported by Github).  
@@ -43,18 +43,18 @@ These can be placed anywhere within the texts.
 Install the composer package:  
 
 ```php
-composer require UrbanMonastics/TextFormater-PHP
+composer require UrbanMonastics/SourceParser
 ```
   
-Or download the latest release and include `TextFormater.php`  
+Or download the latest release and include `SourceParser.php`  
   
 ## Example Usage  
 In the most simple approach you can pass text to be parsed.  
 
 ```php
-$TextFormater = new TextFormater();
+$SourceParser = new SourceParser();
 
-echo $TextFormater->text("Hello *TextFormater*!");  # prints: <p>Hello <em>TextFormater</em>!</p>
+echo $SourceParser->text("Hello *Source Parser*!");  # prints: <p>Hello <em>Source Parser</em>!</p>
 ```
 
 You can also take advantage of the structure of the source texts.
@@ -70,15 +70,15 @@ These texts may need to be used in various formats and contexts. There are going
 
 
 ```php
-	$TextFormater->setLiturgicalElements( true );
-	echo $TextFormater->text("God, [+] come to my assistance,[*]");  # prints: <p>God, <span class="symbol-cross">✛</span> come to my assistance,<span class="symbol-star">*</span></p>
+	$SourceParser->setLiturgicalElements( true );
+	echo $SourceParser->text("God, [+] come to my assistance,[*]");  # prints: <p>God, <span class="symbol-cross">✛</span> come to my assistance,<span class="symbol-star">*</span></p>
 
-	$TextFormater->setLiturgicalHTML( false );	# The default value is True, so you can manualy disable wrapping liturgical elements.
-	echo $TextFormater->text("God, [+] come to my assistance,[*]");  # prints: <p>God, ✛ come to my assistance,*</p>
+	$SourceParser->setLiturgicalHTML( false );	# The default value is True, so you can manualy disable wrapping liturgical elements.
+	echo $SourceParser->text("God, [+] come to my assistance,[*]");  # prints: <p>God, ✛ come to my assistance,*</p>
 ```
 
 ## Development Environment
-To make it easier to develop and build out the TextFormater we have setup a local docker container for you to use. There are some simple unix scripts from the project base directory that you can execute to get setup.
+To make it easier to develop and build out the SourceParser we have setup a local docker container for you to use. There are some simple unix scripts from the project base directory that you can execute to get setup.
 
 
 	# To build or update the container

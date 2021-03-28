@@ -2,7 +2,7 @@
 
 /***********
  *	
- *	TextFormater
+ *	SourceParser
  *	https://developers.urbanmonastic.org/
  *	
  *	© Paul Prins
@@ -12,7 +12,7 @@
  *	
  ***********/
 
-class TextFormater{
+class SourceParser{
 
 
 	// Establish the version of the library
@@ -57,6 +57,7 @@ class TextFormater{
 	protected $markupEscaped = true;	// Escape any HTML syntax in the text (if true convert < into &lt;).
 	protected $liturgicalElements = false;	// Look for liturgical elements in the text
 	protected $liturgicalHTML = true;	// Do we wrap liturgical elements in HTML tags
+	protected $supressAlleluia = false;	// Do we remove the word Alleluia from the text
 	protected $footnotesEnabled = false;	// Look for footnotes in the text
 	protected $intercessionResponse;	
 
@@ -152,6 +153,12 @@ class TextFormater{
 
 	public function setLiturgicalHTML(bool $liturgicalHTML){
 		$this->liturgicalHTML = $liturgicalHTML;
+
+		return $this;
+	}
+
+	public function setSupressAlleluia(bool $supressAlleluia){
+		$this->supressAlleluia = $supressAlleluia;
 
 		return $this;
 	}
