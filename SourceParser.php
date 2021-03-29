@@ -111,10 +111,13 @@ class SourceParser{
 
 	protected $LiturgicalInlineTypes = array(
 		'[' => array(
-			'LiturgicalCross', // [+] This will insert the symbol to prompt the reader to cross themselves. Rendered as ✛ in non HTML [U+271B or `&#10011;`].
+			'LiturgicalCross',	// [+] This will insert the symbol to prompt the reader to cross themselves. Rendered as ✛ in non HTML [U+271B or `&#10011;`].
 			'LiturgicalMidpoint',	// [*] This is the for denoting a mid-point in chanted texts.
 			'LiturgicalDagger',	// [t] This is the dagger/obelisk that indicates the current line continues below. Helpful with chanted texts with more than two lines. Rendered as † in non HTML [U+2020 or `&#8224;` or `&dagger;`].
+			'TextRed',	// [red]Text[/red]
 		),
+		'‾' => array('Overline'),
+		'_' => array('Underline'),
 	);
 	protected $LiturgicalBlockTypes = array(
 		'[V]' => array('Versicle'),	// During the *Responsory* it denotes a **Versicle** line with the leader speaking. Rendered as ℣ in non HTML [U+2123 or `&#8483;`].
@@ -1160,7 +1163,7 @@ class SourceParser{
 				}
 			}
 		}
-var_dump( $ActiveInlineTypes );
+// var_dump( $ActiveInlineTypes );
 
 		$nonNestables = (empty($nonNestables)
 			? array()
@@ -1447,25 +1450,25 @@ var_dump( $ActiveInlineTypes );
 	}
 
 	protected function inlineMarkup($Excerpt){
-		if ($this->markupEscaped or $this->safeMode or strpos($Excerpt['text'], '>') === false){
+		if( $this->markupEscaped || $this->safeMode || strpos($Excerpt['text'], '>') === false){
 			return;
 		}
 
-		if ($Excerpt['text'][1] === '/' and preg_match('/^<\/\w[\w-]*+[ ]*+>/s', $Excerpt['text'], $matches)){
+		if( $Excerpt['text'][1] === '/' && preg_match('/^<\/\w[\w-]*+[ ]*+>/s', $Excerpt['text'], $matches)){
 			return array(
 				'element' => array('rawHtml' => $matches[0]),
 				'extent' => strlen($matches[0]),
 			);
 		}
 
-		if ($Excerpt['text'][1] === '!' and preg_match('/^<!---?[^>-](?:-?+[^-])*-->/s', $Excerpt['text'], $matches)){
+		if( $Excerpt['text'][1] === '!' && preg_match('/^<!---?[^>-](?:-?+[^-])*-->/s', $Excerpt['text'], $matches)){
 			return array(
 				'element' => array('rawHtml' => $matches[0]),
 				'extent' => strlen($matches[0]),
 			);
 		}
 
-		if ($Excerpt['text'][1] !== ' ' and preg_match('/^<\w[\w-]*+(?:[ ]*+'.$this->regexHtmlAttribute.')*+[ ]*+\/?>/s', $Excerpt['text'], $matches)){
+		if( $Excerpt['text'][1] !== ' ' && preg_match('/^<\w[\w-]*+(?:[ ]*+'.$this->regexHtmlAttribute.')*+[ ]*+\/?>/s', $Excerpt['text'], $matches)){
 			return array(
 				'element' => array('rawHtml' => $matches[0]),
 				'extent' => strlen($matches[0]),
@@ -1639,6 +1642,34 @@ var_dump( $ActiveInlineTypes );
 		if( preg_match('/\[t\]/', $remainder, $matches) ){
 			$extent += strlen($matches[0]);
 			$remainder = substr($remainder, $extent);
+		}else{
+			return;
+		}
+
+
+		return array(
+			'extent' => $extent,
+			'element' => $Element,
+		);
+	}
+
+	protected function inlineTextRed( $Excerpt ){
+		if( !$this->liturgicalHTML ){	return;	}
+
+		$Element = array(
+			'name' => 'span',
+			'attributes' => array(
+					'class' => 'color-red',
+				),
+		);
+
+		$extent = 0;
+		$remainder = $Excerpt['text'];
+
+		if( preg_match('/^\[red\]((.|\n)*?)\[\/red\]/', $remainder, $matches) ){
+			$extent += strlen($matches[0]);
+			$remainder = substr($remainder, $extent);
+			$Element['text'] = $matches[1];
 		}else{
 			return;
 		}

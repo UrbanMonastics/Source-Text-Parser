@@ -15,9 +15,9 @@ The source texts use a subset of the Markdown functionality, and include some ad
 To ensure that we can support additional elements. These extensions are broken into inline or block level markings.
 
 ### Inline Extensions
-These can be placed anywhere within the texts. Since there are not standard ways for these to be implemented 
+These can be placed anywhere within the texts. Since there are not standard ways for these to be implemented in HTML. Instead we need to 
 
-*	\_underline\_		Make the encased text underlined (not supported by Github).  
+*	\_underline\_		Make the encased text underlined (not supported by Github). Note that we disable the ability for bold or italic using underscores in order to support underlining texts.  
 *	‾over line‾		Make the encased text over-lined. Only supported in HTML formatting. (not supported by Github).  
 *	\_‾under and over line‾\_		Make the encased text both underlined and over-lined. Only supported in HTML formatting, in other outputs will show as underlined. (not supported by Github).  
 *	[red]red text[/red]		Make the encased text red.  
@@ -59,22 +59,51 @@ echo $SourceParser->text("Hello *Source Parser*!");  # prints: <p>Hello <em>Sour
 
 You can also take advantage of the structure of the source texts.
 
+```php
+$SourceParser = new SourceParser();
+
+// Load the source data into the parser
+$Source = json_decode( file_get_contents('path/to/source.json'), true );
+$SourceParser->loadSource( $Source );
+
+$SourceParser->loadText();
+
+echo $SourceParser->text("Hello *Source Parser*!");  # prints: <p>Hello <em>Source Parser</em>!</p>
+
+// Clear the loaded Source and Texts - without altering other options
+$SourceParser->clearSource();
+```
+
 
 ## Formatting Options
 These texts may need to be used in various formats and contexts. There are going to be situations in which you may want to ensure that only certain elements of text are rendered for your use case.
 
-### Configuration Methods
+### Methods
 
-*	setLiturgicalElements()  
-	This allows you to enable formatting of the liturgical elements within the text. With this disabled you are simply going to parse standard markdown.
+*	**setBreaksEnabled( *bool* )** default: true  
+	When enabled it will transform new line markers `\n` into `<br>`. 
+*	**setMarkupEscaped( *bool* )** default: true  
+	When enabled it will escape any existing HTML syntax within the documents.  
+*	**setLiturgicalElements( *bool* )** default: false  
+	When enabled the standard Markdown will be supplemented with liturgical elements. See Extending Markdown above for additions
+*	**setLiturgicalHTML( *bool* )** default: true  
+	Do we place liturgical markers within HTML tags, or just place them directly into the document.
+*	**setSuppressAlleluia( *bool* )** default: false  
+	During the season of Lent the use of the word Alleluia is suppressed. Enabling this option will remove any line where the only text is the word Alleluia.  
+*	**setTitlesEnabled( *bool* )** default: false  
+	Do we place any titles from the `text.json` document into the output
+*	**setFootnotesEnabled( *bool* )** default: false  
+	Do we place footnotes from the `text.json` document into the output
 
 
 ```php
-	$SourceParser->setLiturgicalElements( true );
-	echo $SourceParser->text("God, [+] come to my assistance,[*]");  # prints: <p>God, <span class="symbol-cross">✛</span> come to my assistance,<span class="symbol-star">*</span></p>
+$SourceParser->setLiturgicalElements( true );
+echo $SourceParser->text("God, [+] come to my assistance,[*]");
+// prints: <p>God, <span class="symbol-cross">✛</span> come to my assistance,<span class="symbol-star">*</span></p>
 
-	$SourceParser->setLiturgicalHTML( false );	# The default value is True, so you can manualy disable wrapping liturgical elements.
-	echo $SourceParser->text("God, [+] come to my assistance,[*]");  # prints: <p>God, ✛ come to my assistance,*</p>
+$SourceParser->setLiturgicalHTML( false );	# The default value is True, so you can manually disable wrapping liturgical elements.
+echo $SourceParser->text("God, [+] come to my assistance,[*]");
+// prints: <p>God, ✛ come to my assistance,*</p>
 ```
 
 ## Development Environment
