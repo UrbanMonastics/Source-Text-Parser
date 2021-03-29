@@ -116,8 +116,8 @@ class SourceParser{
 			'LiturgicalDagger',	// [t] This is the dagger/obelisk that indicates the current line continues below. Helpful with chanted texts with more than two lines. Rendered as † in non HTML [U+2020 or `&#8224;` or `&dagger;`].
 			'TextRed',	// [red]Text[/red]
 		),
-		'‾' => array('Overline'),
-		'_' => array('Underline'),
+		'‾' => array('OverUnderLine'),
+		'_' => array('OverUnderLine'),
 	);
 	protected $LiturgicalBlockTypes = array(
 		'[V]' => array('Versicle'),	// During the *Responsory* it denotes a **Versicle** line with the leader speaking. Rendered as ℣ in non HTML [U+2123 or `&#8483;`].
@@ -1172,11 +1172,7 @@ class SourceParser{
 
 		# $excerpt is based on the first occurrence of a marker
 		while ($excerpt = strpbrk($text, $this->inlineMarkerList)){
-			$marker = $excerpt[0];
-			if( $marker == '[' ){
-				// check if it might be a liturgical marker
-			}
-
+			$marker = mb_substr( $excerpt, 0, 1 );
 			$markerPosition = strlen($text) - strlen($excerpt);
 
 			$Excerpt = array('text' => $excerpt, 'context' => $text);
@@ -1654,14 +1650,16 @@ class SourceParser{
 	}
 
 	protected function inlineTextRed( $Excerpt ){
-		if( !$this->liturgicalHTML ){	return;	}
-
-		$Element = array(
-			'name' => 'span',
-			'attributes' => array(
-					'class' => 'color-red',
-				),
-		);
+		if( $this->liturgicalHTML ){
+			$Element = array(
+				'name' => 'span',
+				'attributes' => array(
+						'class' => 'color-red',
+					),
+			);
+		}else{
+			$Element = array();	// This will simply strip the tags from rendering - as there is no direct way to render red text
+		}
 
 		$extent = 0;
 		$remainder = $Excerpt['text'];
@@ -1670,6 +1668,49 @@ class SourceParser{
 			$extent += strlen($matches[0]);
 			$remainder = substr($remainder, $extent);
 			$Element['text'] = $matches[1];
+		}else{
+			return;
+		}
+
+
+		return array(
+			'extent' => $extent,
+			'element' => $Element,
+		);
+	}
+
+	protected function inlineOverUnderLine( $Excerpt ){
+		if( $this->liturgicalHTML ){
+			$Element = array(
+				'name' => 'span',
+				'attributes' => array(
+						'class' => null
+					),
+			);
+		}else{
+			$Element = array();	// This will simply strip the tags from rendering - as there is no direct way to render red text
+		}
+
+		$extent = 0;
+		$remainder = $Excerpt['text'];
+
+		if( preg_match('/^_‾|‾_((.|\n)*?)_‾|‾_/u', $remainder, $matches) ){
+			$extent += strlen($matches[0]);
+			$remainder = substr($remainder, $extent);
+			$Element['text'] = $matches[1];
+			$Element['attributes']['class'] = 'text-overline text-underline';
+		}else if( preg_match('/^‾((.|\n)*?)‾/u', $remainder, $matches) ){
+			$extent += strlen($matches[0]);
+			$remainder = substr($remainder, $extent);
+			$Element['text'] = $matches[1];
+			$Element['attributes']['class'] = 'text-overline';
+
+		}else if( preg_match('/^_((.|\n)*?)_/', $remainder, $matches) ){
+			$extent += strlen($matches[0]);
+			$remainder = substr($remainder, $extent);
+			$Element['text'] = $matches[1];
+			$Element['attributes']['class'] = 'text-underline';
+
 		}else{
 			return;
 		}

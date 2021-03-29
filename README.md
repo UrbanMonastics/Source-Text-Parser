@@ -17,10 +17,10 @@ To ensure that we can support additional elements. These extensions are broken i
 ### Inline Extensions
 These can be placed anywhere within the texts. Since there are not standard ways for these to be implemented in HTML. Instead we need to 
 
-*	\_underline\_		Make the encased text underlined (not supported by Github). Note that we disable the ability for bold or italic using underscores in order to support underlining texts.  
-*	‾over line‾		Make the encased text over-lined. Only supported in HTML formatting. (not supported by Github).  
-*	\_‾under and over line‾\_		Make the encased text both underlined and over-lined. Only supported in HTML formatting, in other outputs will show as underlined. (not supported by Github).  
-*	[red]red text[/red]		Make the encased text red.  
+*	\_underline\_		Make the encased text underlined. Note that we disable the ability for bold or italic using underscores in order to support underlining texts. (not supported by Github)  
+*	‾over line‾		Make the encased text over-lined. Only supported in HTML formatting. (not supported by Github)  
+*	\_‾under and over line‾\_		Make the encased text both underlined and over-lined. Only supported in HTML formatting, in other outputs will show as underlined. (not supported by Github)  
+*	[red]red text[/red]		Make the encased text red. Output is `<span class="color-red">red text</span>` only when *LiturgicalElements* is enabled otherwise it is simply stripped.  
 *	[+]		This will insert the symbol to prompt the reader to cross themselves. Rendered as ✛ in non HTML [U+271B or `&#10011;`].
 *	[*]		This is the for denoting a mid-point in chanted texts.  
 *	[t]		This is the dagger/obelisk that indicates the current line continues below. Helpful with chanted texts with more than two lines. Rendered as † in non HTML [U+2020 or `&#8224;` or `&dagger;`].  
