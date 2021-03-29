@@ -102,7 +102,7 @@ class SourceParser{
 		':' => array('Url'),
 		'<' => array('UrlTag', 'EmailTag', 'Markup'),
 		'[' => array('Link'),
-		'_' => array('Emphasis'),
+		// '_' => array('Emphasis'),
 		'`' => array('Code'),
 		'~' => array('Strikethrough'),
 		'\\' => array('EscapeSequence'),
