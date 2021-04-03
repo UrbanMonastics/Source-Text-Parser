@@ -11,7 +11,7 @@ The source texts use a subset of the Markdown functionality, and include some ad
 *	Fast
 *	Extended to support Liturgical needs
 *	[GitHub flavored](https://github.github.com/gfm)
-*	[Tested](http://parsedown.org/tests/) in 5.3 to 7.3
+*	[Tested](http://parsedown.org/tests/) in 7.0 to 8.0
 
 ## Extending Markdown  
 To ensure that we can support additional elements. These extensions are broken into inline or block level markings.
