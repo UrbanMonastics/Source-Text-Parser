@@ -53,6 +53,9 @@ class SourceParserTest extends TestCase
         $this->SourceParser->setSafeMode(substr($test, 0, 3) === 'xss');
         $this->SourceParser->setStrictMode(substr($test, 0, 6) === 'strict');
 
+		// Add support for Liturgical Elements
+        $this->SourceParser->setLiturgicalElements(substr($test, 0, 7) === 'liturgy');
+
         $actualMarkup = $this->SourceParser->text( $markdown );
 
         $this->assertEquals($expectedMarkup, $actualMarkup, "This Test: " . $test );

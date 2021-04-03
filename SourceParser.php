@@ -1922,7 +1922,7 @@ class SourceParser{
 		$extent = 0;
 		$remainder = $Excerpt['text'];
 
-		if( preg_match('/^_‾|‾_((.|\n)*?)_‾|‾_/u', $remainder, $matches) ){
+		if( preg_match('/^(?:_‾|‾_)((.|\n)*?)(?:‾_|_‾)/u', $remainder, $matches) ){
 			$extent += strlen($matches[0]);
 			$remainder = substr($remainder, $extent);
 			$Element['text'] = $matches[1];
@@ -1932,8 +1932,6 @@ class SourceParser{
 			$remainder = substr($remainder, $extent);
 			$Element['text'] = $matches[1];
 			$Element['attributes']['class'] = 'text-overline';
-
-		// }else if( preg_match('/^_((.|\n)*?)_/', $remainder, $matches) ){
 		}else if ( preg_match('/^_((?:\\\\_|[^_]|__[^_]*__)+?)_(?!_)\b/us', $remainder, $matches) ){
 			$extent += strlen($matches[0]);
 			$remainder = substr($remainder, $extent);
