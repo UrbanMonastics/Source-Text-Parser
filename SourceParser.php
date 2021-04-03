@@ -54,12 +54,17 @@ class SourceParser{
 	 *	Establish the variables
 	 */
 	protected $breaksEnabled = true;	// Convert \r\n into line breaks.
-	protected $markupEscaped = true;	// Escape any HTML syntax in the text (if true convert < into &lt;).
+	protected $markupEscaped = false;	// Escape any HTML syntax in the text (if true convert < into &lt;).
+	protected $urlsLinked = true;		// Convert any URL into a link
+	protected $safeMode = false;	// How strict are we about raw HTML code
+	protected $strictMode;
 	protected $liturgicalElements = false;	// Look for liturgical elements in the text
 	protected $liturgicalHTML = true;	// Do we wrap liturgical elements in HTML tags
-	protected $supressAlleluia = false;	// Do we remove the word Alleluia from the text
-	protected $footnotesEnabled = false;	// Look for footnotes in the text
-	protected $intercessionResponse;	
+	protected $suppressAlleluia = false;	// Do we remove the word Alleluia from the text
+	protected $footnotesEnabled = false;	// Look for footnotes in the source
+	protected $titlesEnabled = false;	// Look for titles in the source
+	protected $intercessionResponse;	// Used for Caching the response to the intercession intentions to make placing it easier.
+	protected $responseResponse;	// Used for Caching the response to the intercession intentions to make placing it easier.
 
 	private static $instances = array();
 	protected $DefinitionData;
@@ -102,7 +107,7 @@ class SourceParser{
 		':' => array('Url'),
 		'<' => array('UrlTag', 'EmailTag', 'Markup'),
 		'[' => array('Link'),
-		// '_' => array('Emphasis'),
+		'_' => array(),
 		'`' => array('Code'),
 		'~' => array('Strikethrough'),
 		'\\' => array('EscapeSequence'),
@@ -120,12 +125,14 @@ class SourceParser{
 		'_' => array('OverUnderLine'),
 	);
 	protected $LiturgicalBlockTypes = array(
-		'[V]' => array('Versicle'),	// During the *Responsory* it denotes a **Versicle** line with the leader speaking. Rendered as ℣ in non HTML [U+2123 or `&#8483;`].
-		'[R]' => array('Response'),	// During the *Responsory* it denotes **Response** line with all speaking. Rendered as ℟ in non HTML [U+211F or `&#8479;`].
-		'[II]' => array('IntercessionIntro'),	// During the *Intercessions* this indicates the **Introduction** to the intentions. When prayed in a group it should be read only by the leader.
-		'[IR]' => array('IntercessionResponse'),	// During the *Intercessions* this indicated the **Response**. It should only be placed in the source text on the line after the introduction. It will be placed in other locations when formated. When prayed in a group it should be read only by the leader.
-		'[I1]' => array('IntentionPart1'),	// During the *Intercessions* this indicates the first part of an **intention**.
-		'[I2]' => array('IntentionPart2'),	// During the *Intercessions* this indicates the second part of an **intention**.
+		'[' => array(
+			'LiturgicalResponse',	// [V] or [R] During the *Responsory* it denotes a **Versicle** line with the leader speaking or **Response** line with all speaking. Rendered as ℣ in non HTML [U+2123 or `&#8483;`] or  ℟ in non HTML [U+211F or `&#8479;`]
+			'LiturgicalIntercession',	// [II], [IR], [I1], [I2] During the *Intercessions* this indicates the **Introduction** to the intentions. When prayed in a group it should be read only by the leader. [IR]  During the *Intercessions* this indicated the **Response**. It should only be placed in the source text on the line after the introduction. It will be placed in other locations when formated. When prayed in a group it should be read only by the leader. [I1] or [I2] During the *Intercessions* this indicates the first or second part of an **intention**.
+		)
+	);
+	protected $LiturgicalSymbols = array(
+		'versicle' => '&#8483;',
+		'response' => '&#8479;',
 	);
 	/*
 	 *	END: Establish the variables
@@ -136,6 +143,18 @@ class SourceParser{
 	/*
 	 * Configuration Setters
 	 */
+	public function setSafeMode(bool $safeMode){
+		$this->safeMode = (bool) $safeMode;
+
+		return $this;
+	}
+
+	public function setStrictMode(bool $strictMode){
+		$this->strictMode = (bool) $strictMode;
+
+		return $this;
+	}
+
 	public function setBreaksEnabled(bool $breaksEnabled){
 		$this->breaksEnabled = $breaksEnabled;
 
@@ -144,6 +163,12 @@ class SourceParser{
 
 	public function setMarkupEscaped(bool $markupEscaped){
 		$this->markupEscaped = $markupEscaped;
+
+		return $this;
+	}
+
+	function setUrlsLinked($urlsLinked){
+		$this->urlsLinked = $urlsLinked;
 
 		return $this;
 	}
@@ -160,8 +185,14 @@ class SourceParser{
 		return $this;
 	}
 
-	public function setSupressAlleluia(bool $supressAlleluia){
-		$this->supressAlleluia = $supressAlleluia;
+	public function setSuppressAlleluia(bool $suppressAlleluia){
+		$this->suppressAlleluia = $suppressAlleluia;
+
+		return $this;
+	}
+
+	public function setTitlesEnabled(bool $titlesEnabled){
+		$this->titlesEnabled = $titlesEnabled;
 
 		return $this;
 	}
@@ -271,8 +302,6 @@ class SourceParser{
 
 			$marker = $text[0];
 
-			var_dump( $marker );
-
 
 			/*
 			 * Prepare the unmarked block types
@@ -285,7 +314,12 @@ class SourceParser{
 				}
 			}
 
-			var_dump( $blockTypes );
+			if( $this->liturgicalElements && isset($this->LiturgicalBlockTypes[$marker]) ){
+				foreach ($this->LiturgicalBlockTypes[$marker] as $blockType){
+					$blockTypes []= $blockType;
+				}
+			}
+
 
 			/*
 			 * Prepare the unmarked block types
@@ -345,7 +379,6 @@ class SourceParser{
 
 		if (isset($CurrentBlock)){
 			$Elements[] = $this->extractElement($CurrentBlock);
-			var_dump( $Elements );
 		}
 
 		# ~
@@ -383,448 +416,378 @@ class SourceParser{
 	/*
 	 * Block Element Processing
 	 */
-    protected function blockCode($Line, $Block = null)
-    {
-        if (isset($Block) and $Block['type'] === 'Paragraph' and ! isset($Block['interrupted']))
-        {
-            return;
-        }
-
-        if ($Line['indent'] >= 4)
-        {
-            $text = substr($Line['body'], 4);
-
-            $Block = array(
-                'element' => array(
-                    'name' => 'pre',
-                    'element' => array(
-                        'name' => 'code',
-                        'text' => $text,
-                    ),
-                ),
-            );
-
-            return $Block;
-        }
-    }
-
-    protected function blockCodeContinue($Line, $Block)
-    {
-        if ($Line['indent'] >= 4)
-        {
-            if (isset($Block['interrupted']))
-            {
-                $Block['element']['element']['text'] .= str_repeat("\n", $Block['interrupted']);
-
-                unset($Block['interrupted']);
-            }
-
-            $Block['element']['element']['text'] .= "\n";
-
-            $text = substr($Line['body'], 4);
-
-            $Block['element']['element']['text'] .= $text;
-
-            return $Block;
-        }
-    }
-
-    protected function blockCodeComplete($Block)
-    {
-        return $Block;
-    }
-
-    #
-    # Comment
-
-    protected function blockComment($Line)
-    {
-        if ($this->markupEscaped or $this->safeMode)
-        {
-            return;
-        }
-
-        if (strpos($Line['text'], '<!--') === 0)
-        {
-            $Block = array(
-                'element' => array(
-                    'rawHtml' => $Line['body'],
-                    'autobreak' => true,
-                ),
-            );
-
-            if (strpos($Line['text'], '-->') !== false)
-            {
-                $Block['closed'] = true;
-            }
-
-            return $Block;
-        }
-    }
-
-    protected function blockCommentContinue($Line, array $Block)
-    {
-        if (isset($Block['closed']))
-        {
-            return;
-        }
-
-        $Block['element']['rawHtml'] .= "\n" . $Line['body'];
-
-        if (strpos($Line['text'], '-->') !== false)
-        {
-            $Block['closed'] = true;
-        }
-
-        return $Block;
-    }
-
-    #
-    # Fenced Code
-
-    protected function blockFencedCode($Line)
-    {
-        $marker = $Line['text'][0];
-
-        $openerLength = strspn($Line['text'], $marker);
-
-        if ($openerLength < 3)
-        {
-            return;
-        }
-
-        $infostring = trim(substr($Line['text'], $openerLength), "\t ");
-
-        if (strpos($infostring, '`') !== false)
-        {
-            return;
-        }
-
-        $Element = array(
-            'name' => 'code',
-            'text' => '',
-        );
-
-        if ($infostring !== ''){
-            /**
-             * https://www.w3.org/TR/2011/WD-html5-20110525/elements.html#classes
-             * Every HTML element may have a class attribute specified.
-             * The attribute, if specified, must have a value that is a set
-             * of space-separated tokens representing the various classes
-             * that the element belongs to.
-             * [...]
-             * The space characters, for the purposes of this specification,
-             * are U+0020 SPACE, U+0009 CHARACTER TABULATION (tab),
-             * U+000A LINE FEED (LF), U+000C FORM FEED (FF), and
-             * U+000D CARRIAGE RETURN (CR).
-             */
-            $language = substr($infostring, 0, strcspn($infostring, " \t\n\f\r"));
-
-            $Element['attributes'] = array('class' => "language-$language");
-        }
-
-        $Block = array(
-            'char' => $marker,
-            'openerLength' => $openerLength,
-            'element' => array(
-                'name' => 'pre',
-                'element' => $Element,
-            ),
-        );
-
-        return $Block;
-    }
-
-    protected function blockFencedCodeContinue($Line, $Block)
-    {
-        if (isset($Block['complete']))
-        {
-            return;
-        }
-
-        if (isset($Block['interrupted']))
-        {
-            $Block['element']['element']['text'] .= str_repeat("\n", $Block['interrupted']);
-
-            unset($Block['interrupted']);
-        }
-
-        if (($len = strspn($Line['text'], $Block['char'])) >= $Block['openerLength']
-            and chop(substr($Line['text'], $len), ' ') === ''
-        ) {
-            $Block['element']['element']['text'] = substr($Block['element']['element']['text'], 1);
-
-            $Block['complete'] = true;
-
-            return $Block;
-        }
-
-        $Block['element']['element']['text'] .= "\n" . $Line['body'];
-
-        return $Block;
-    }
-
-    protected function blockFencedCodeComplete($Block)
-    {
-        return $Block;
-    }
-
-    #
-    # Header
-
-    protected function blockHeader($Line)
-    {
-        $level = strspn($Line['text'], '#');
-
-        if ($level > 6)
-        {
-            return;
-        }
-
-        $text = trim($Line['text'], '#');
-
-        if ($this->strictMode and isset($text[0]) and $text[0] !== ' ')
-        {
-            return;
-        }
-
-        $text = trim($text, ' ');
-
-        $Block = array(
-            'element' => array(
-                'name' => 'h' . $level,
-                'handler' => array(
-                    'function' => 'lineElements',
-                    'argument' => $text,
-                    'destination' => 'elements',
-                )
-            ),
-        );
-
-        return $Block;
-    }
-
-    #
-    # List
-
-    protected function blockList($Line, array $CurrentBlock = null)
-    {
-        list($name, $pattern) = $Line['text'][0] <= '-' ? array('ul', '[*+-]') : array('ol', '[0-9]{1,9}+[.\)]');
-
-        if (preg_match('/^('.$pattern.'([ ]++|$))(.*+)/', $Line['text'], $matches))
-        {
-            $contentIndent = strlen($matches[2]);
-
-            if ($contentIndent >= 5)
-            {
-                $contentIndent -= 1;
-                $matches[1] = substr($matches[1], 0, -$contentIndent);
-                $matches[3] = str_repeat(' ', $contentIndent) . $matches[3];
-            }
-            elseif ($contentIndent === 0)
-            {
-                $matches[1] .= ' ';
-            }
-
-            $markerWithoutWhitespace = strstr($matches[1], ' ', true);
-
-            $Block = array(
-                'indent' => $Line['indent'],
-                'pattern' => $pattern,
-                'data' => array(
-                    'type' => $name,
-                    'marker' => $matches[1],
-                    'markerType' => ($name === 'ul' ? $markerWithoutWhitespace : substr($markerWithoutWhitespace, -1)),
-                ),
-                'element' => array(
-                    'name' => $name,
-                    'elements' => array(),
-                ),
-            );
-            $Block['data']['markerTypeRegex'] = preg_quote($Block['data']['markerType'], '/');
-
-            if ($name === 'ol')
-            {
-                $listStart = ltrim(strstr($matches[1], $Block['data']['markerType'], true), '0') ?: '0';
-
-                if ($listStart !== '1')
-                {
-                    if (
-                        isset($CurrentBlock)
-                        and $CurrentBlock['type'] === 'Paragraph'
-                        and ! isset($CurrentBlock['interrupted'])
-                    ) {
-                        return;
-                    }
-
-                    $Block['element']['attributes'] = array('start' => $listStart);
-                }
-            }
-
-            $Block['li'] = array(
-                'name' => 'li',
-                'handler' => array(
-                    'function' => 'li',
-                    'argument' => !empty($matches[3]) ? array($matches[3]) : array(),
-                    'destination' => 'elements'
-                )
-            );
-
-            $Block['element']['elements'] []= & $Block['li'];
-
-            return $Block;
-        }
-    }
-
-    protected function blockListContinue($Line, array $Block)
-    {
-        if (isset($Block['interrupted']) and empty($Block['li']['handler']['argument']))
-        {
-            return null;
-        }
-
-        $requiredIndent = ($Block['indent'] + strlen($Block['data']['marker']));
-
-        if ($Line['indent'] < $requiredIndent
-            and (
-                (
-                    $Block['data']['type'] === 'ol'
-                    and preg_match('/^[0-9]++'.$Block['data']['markerTypeRegex'].'(?:[ ]++(.*)|$)/', $Line['text'], $matches)
-                ) or (
-                    $Block['data']['type'] === 'ul'
-                    and preg_match('/^'.$Block['data']['markerTypeRegex'].'(?:[ ]++(.*)|$)/', $Line['text'], $matches)
-                )
-            )
-        ) {
-            if (isset($Block['interrupted']))
-            {
-                $Block['li']['handler']['argument'] []= '';
-
-                $Block['loose'] = true;
-
-                unset($Block['interrupted']);
-            }
-
-            unset($Block['li']);
-
-            $text = isset($matches[1]) ? $matches[1] : '';
-
-            $Block['indent'] = $Line['indent'];
-
-            $Block['li'] = array(
-                'name' => 'li',
-                'handler' => array(
-                    'function' => 'li',
-                    'argument' => array($text),
-                    'destination' => 'elements'
-                )
-            );
-
-            $Block['element']['elements'] []= & $Block['li'];
-
-            return $Block;
-        }
-        elseif ($Line['indent'] < $requiredIndent and $this->blockList($Line))
-        {
-            return null;
-        }
-
-        if ($Line['text'][0] === '[' and $this->blockReference($Line))
-        {
-            return $Block;
-        }
-
-        if ($Line['indent'] >= $requiredIndent)
-        {
-            if (isset($Block['interrupted']))
-            {
-                $Block['li']['handler']['argument'] []= '';
-
-                $Block['loose'] = true;
-
-                unset($Block['interrupted']);
-            }
-
-            $text = substr($Line['body'], $requiredIndent);
-
-            $Block['li']['handler']['argument'] []= $text;
-
-            return $Block;
-        }
-
-        if ( ! isset($Block['interrupted']))
-        {
-            $text = preg_replace('/^[ ]{0,'.$requiredIndent.'}+/', '', $Line['body']);
-
-            $Block['li']['handler']['argument'] []= $text;
-
-            return $Block;
-        }
-    }
-
-    protected function blockListComplete(array $Block)
-    {
-        if (isset($Block['loose']))
-        {
-            foreach ($Block['element']['elements'] as &$li)
-            {
-                if (end($li['handler']['argument']) !== '')
-                {
-                    $li['handler']['argument'] []= '';
-                }
-            }
-        }
-
-        return $Block;
-    }
-
-    #
-    # Quote
-
-    protected function blockQuote($Line)
-    {
-        if (preg_match('/^>[ ]?+(.*+)/', $Line['text'], $matches))
-        {
-            $Block = array(
-                'element' => array(
-                    'name' => 'blockquote',
-                    'handler' => array(
-                        'function' => 'linesElements',
-                        'argument' => (array) $matches[1],
-                        'destination' => 'elements',
-                    )
-                ),
-            );
-
-            return $Block;
-        }
-    }
-
-    protected function blockQuoteContinue($Line, array $Block)
-    {
-        if (isset($Block['interrupted']))
-        {
-            return;
-        }
-
-        if ($Line['text'][0] === '>' and preg_match('/^>[ ]?+(.*+)/', $Line['text'], $matches))
-        {
-            $Block['element']['handler']['argument'] []= $matches[1];
-
-            return $Block;
-        }
-
-        if ( ! isset($Block['interrupted']))
-        {
-            $Block['element']['handler']['argument'] []= $Line['text'];
-
-            return $Block;
-        }
-    }
-
-    #
-    # Rule
-
+	protected function blockCode($Line, $Block = null){
+		if (isset($Block) and $Block['type'] === 'Paragraph' and ! isset($Block['interrupted'])){
+			return;
+		}
+
+		if ($Line['indent'] >= 4){
+			$text = substr($Line['body'], 4);
+
+			$Block = array(
+				'element' => array(
+					'name' => 'pre',
+					'element' => array(
+						'name' => 'code',
+						'text' => $text,
+					),
+				),
+			);
+
+			return $Block;
+		}
+	}
+
+	protected function blockCodeContinue($Line, $Block){
+		if ($Line['indent'] >= 4){
+			if (isset($Block['interrupted'])){
+				$Block['element']['element']['text'] .= str_repeat("\n", $Block['interrupted']);
+
+				unset($Block['interrupted']);
+			}
+
+			$Block['element']['element']['text'] .= "\n";
+
+			$text = substr($Line['body'], 4);
+
+			$Block['element']['element']['text'] .= $text;
+
+			return $Block;
+		}
+	}
+
+	protected function blockCodeComplete($Block){
+		return $Block;
+	}
+
+	#
+	# Comment
+	protected function blockComment($Line){
+		if ($this->markupEscaped or $this->safeMode){
+			return;
+		}
+
+		if (strpos($Line['text'], '<!--') === 0){
+			$Block = array(
+				'element' => array(
+					'rawHtml' => $Line['body'],
+					'autobreak' => true,
+				),
+			);
+
+			if (strpos($Line['text'], '-->') !== false){
+				$Block['closed'] = true;
+			}
+
+			return $Block;
+		}
+	}
+
+	protected function blockCommentContinue($Line, array $Block){
+		if (isset($Block['closed'])){
+			return;
+		}
+
+		$Block['element']['rawHtml'] .= "\n" . $Line['body'];
+
+		if (strpos($Line['text'], '-->') !== false){
+			$Block['closed'] = true;
+		}
+
+		return $Block;
+	}
+
+	#
+	# Fenced Code
+	protected function blockFencedCode($Line){
+		$marker = $Line['text'][0];
+
+		$openerLength = strspn($Line['text'], $marker);
+
+		if ($openerLength < 3){
+			return;
+		}
+
+		$infostring = trim(substr($Line['text'], $openerLength), "\t ");
+
+		if (strpos($infostring, '`') !== false){
+			return;
+		}
+
+		$Element = array(
+			'name' => 'code',
+			'text' => '',
+		);
+
+		if ($infostring !== ''){
+			/**
+			 * https://www.w3.org/TR/2011/WD-html5-20110525/elements.html#classes
+			 * Every HTML element may have a class attribute specified.
+			 * The attribute, if specified, must have a value that is a set
+			 * of space-separated tokens representing the various classes
+			 * that the element belongs to.
+			 * [...]
+			 * The space characters, for the purposes of this specification,
+			 * are U+0020 SPACE, U+0009 CHARACTER TABULATION (tab),
+			 * U+000A LINE FEED (LF), U+000C FORM FEED (FF), and
+			 * U+000D CARRIAGE RETURN (CR).
+			 */
+			$language = substr($infostring, 0, strcspn($infostring, " \t\n\f\r"));
+
+			$Element['attributes'] = array('class' => "language-$language");
+		}
+
+		$Block = array(
+			'char' => $marker,
+			'openerLength' => $openerLength,
+			'element' => array(
+				'name' => 'pre',
+				'element' => $Element,
+			),
+		);
+
+		return $Block;
+	}
+
+	protected function blockFencedCodeContinue($Line, $Block){
+		if (isset($Block['complete'])){
+			return;
+		}
+
+		if (isset($Block['interrupted'])){
+			$Block['element']['element']['text'] .= str_repeat("\n", $Block['interrupted']);
+
+			unset($Block['interrupted']);
+		}
+
+		if ( ($len = strspn($Line['text'], $Block['char'])) >= $Block['openerLength'] && chop(substr($Line['text'], $len), ' ') === '' ){
+			$Block['element']['element']['text'] = substr($Block['element']['element']['text'], 1);
+			$Block['complete'] = true;
+
+			return $Block;
+		}
+
+		$Block['element']['element']['text'] .= "\n" . $Line['body'];
+
+		return $Block;
+	}
+
+	protected function blockFencedCodeComplete($Block){
+		return $Block;
+	}
+
+	#
+	# Header
+	protected function blockHeader($Line){
+		$level = strspn($Line['text'], '#');
+
+		if ($level > 6){
+			return;
+		}
+
+		$text = trim($Line['text'], '#');
+
+		if ($this->strictMode && isset($text[0]) && $text[0] !== ' '){
+			return;
+		}
+
+		$text = trim($text, ' ');
+
+		$Block = array(
+			'element' => array(
+				'name' => 'h' . $level,
+				'handler' => array(
+					'function' => 'lineElements',
+					'argument' => $text,
+					'destination' => 'elements',
+				)
+			),
+		);
+
+		return $Block;
+	}
+
+	#
+	# List
+	protected function blockList($Line, array $CurrentBlock = null){
+		list($name, $pattern) = $Line['text'][0] <= '-' ? array('ul', '[*+-]') : array('ol', '[0-9]{1,9}+[.\)]');
+
+		if ( preg_match('/^('.$pattern.'([ ]++|$))(.*+)/', $Line['text'], $matches ) ){
+			$contentIndent = strlen($matches[2]);
+
+			if ($contentIndent >= 5){
+				$contentIndent -= 1;
+				$matches[1] = substr($matches[1], 0, -$contentIndent);
+				$matches[3] = str_repeat(' ', $contentIndent) . $matches[3];
+			}elseif ($contentIndent === 0){
+				$matches[1] .= ' ';
+			}
+
+			$markerWithoutWhitespace = strstr($matches[1], ' ', true);
+
+			$Block = array(
+				'indent' => $Line['indent'],
+				'pattern' => $pattern,
+				'data' => array(
+					'type' => $name,
+					'marker' => $matches[1],
+					'markerType' => ($name === 'ul' ? $markerWithoutWhitespace : substr($markerWithoutWhitespace, -1)),
+				),
+				'element' => array(
+					'name' => $name,
+					'elements' => array(),
+				),
+			);
+
+			$Block['data']['markerTypeRegex'] = preg_quote($Block['data']['markerType'], '/');
+
+			if ($name === 'ol'){
+				$listStart = ltrim(strstr($matches[1], $Block['data']['markerType'], true), '0') ?: '0';
+
+				if ($listStart !== '1'){
+					if ( isset($CurrentBlock) && $CurrentBlock['type'] === 'Paragraph' && ! isset($CurrentBlock['interrupted']) ) {
+						return;
+					}
+
+					$Block['element']['attributes'] = array('start' => $listStart);
+				}
+			}
+
+			$Block['li'] = array(
+				'name' => 'li',
+				'handler' => array(
+					'function' => 'li',
+					'argument' => !empty($matches[3]) ? array($matches[3]) : array(),
+					'destination' => 'elements'
+				)
+			);
+
+			$Block['element']['elements'] []= & $Block['li'];
+
+			return $Block;
+		}
+	}
+
+	protected function blockListContinue($Line, array $Block){
+		if( isset( $Block['interrupted'] ) && empty( $Block['li']['handler']['argument'] ) ){
+			return null;
+		}
+
+		$requiredIndent = ($Block['indent'] + strlen($Block['data']['marker']));
+
+		if ($Line['indent'] < $requiredIndent && (
+				( $Block['data']['type'] === 'ol' && preg_match('/^[0-9]++'.$Block['data']['markerTypeRegex'].'(?:[ ]++(.*)|$)/', $Line['text'], $matches) )
+				|| ( $Block['data']['type'] === 'ul' && preg_match('/^'.$Block['data']['markerTypeRegex'].'(?:[ ]++(.*)|$)/', $Line['text'], $matches) )
+		) ){
+			if (isset($Block['interrupted'])){
+				$Block['li']['handler']['argument'] []= '';
+
+				$Block['loose'] = true;
+
+				unset($Block['interrupted']);
+			}
+
+			unset($Block['li']);
+
+			$text = isset($matches[1]) ? $matches[1] : '';
+
+			$Block['indent'] = $Line['indent'];
+
+			$Block['li'] = array(
+				'name' => 'li',
+				'handler' => array(
+					'function' => 'li',
+					'argument' => array($text),
+					'destination' => 'elements'
+				)
+			);
+
+			$Block['element']['elements'] []= & $Block['li'];
+
+			return $Block;
+		}elseif ($Line['indent'] < $requiredIndent and $this->blockList($Line)){
+			return null;
+		}
+
+		if ($Line['text'][0] === '[' and $this->blockReference($Line)){
+			return $Block;
+		}
+
+		if ($Line['indent'] >= $requiredIndent){
+			if (isset($Block['interrupted'])){
+				$Block['li']['handler']['argument'] []= '';
+
+				$Block['loose'] = true;
+
+				unset($Block['interrupted']);
+			}
+
+			$text = substr($Line['body'], $requiredIndent);
+
+			$Block['li']['handler']['argument'] []= $text;
+
+			return $Block;
+		}
+
+		if ( ! isset($Block['interrupted'])){
+			$text = preg_replace('/^[ ]{0,'.$requiredIndent.'}+/', '', $Line['body']);
+			$Block['li']['handler']['argument'] []= $text;
+
+			return $Block;
+		}
+	}
+
+	protected function blockListComplete(array $Block){
+		if (isset($Block['loose'])){
+			foreach($Block['element']['elements'] as &$li){
+				if( end( $li['handler']['argument'] ) !== '' ){
+					$li['handler']['argument'][]= '';
+				}
+			}
+		}
+
+		return $Block;
+	}
+
+	#
+	# Quote
+	protected function blockQuote($Line){
+		if (preg_match('/^>[ ]?+(.*+)/', $Line['text'], $matches)){
+			$Block = array(
+				'element' => array(
+					'name' => 'blockquote',
+					'handler' => array(
+						'function' => 'linesElements',
+						'argument' => (array) $matches[1],
+						'destination' => 'elements',
+					)
+				),
+			);
+
+			return $Block;
+		}
+	}
+
+	protected function blockQuoteContinue($Line, array $Block){
+		if (isset($Block['interrupted'])){
+			return;
+		}
+
+		if ($Line['text'][0] === '>' and preg_match('/^>[ ]?+(.*+)/', $Line['text'], $matches)){
+			$Block['element']['handler']['argument'] []= $matches[1];
+
+			return $Block;
+		}
+
+		if ( ! isset($Block['interrupted'])){
+			$Block['element']['handler']['argument'] []= $Line['text'];
+
+			return $Block;
+		}
+	}
+
+	#
+	# Rule
     protected function blockRule($Line)
     {
         $marker = $Line['text'][0];
@@ -1105,38 +1068,35 @@ class SourceParser{
 
             return $Block;
         }
-    }
+	}
 
-    #
-    # ~
-    #
+	#
+	# ~
+	#
 
-    protected function paragraph($Line)
-    {
-        return array(
-            'type' => 'Paragraph',
-            'element' => array(
-                'name' => 'p',
-                'handler' => array(
-                    'function' => 'lineElements',
-                    'argument' => $Line['text'],
-                    'destination' => 'elements',
-                ),
-            ),
-        );
-    }
+	protected function paragraph($Line){
+		return array(
+			'type' => 'Paragraph',
+			'element' => array(
+				'name' => 'p',
+				'handler' => array(
+					'function' => 'lineElements',
+					'argument' => $Line['text'],
+					'destination' => 'elements',
+				),
+			),
+		);
+	}
 
-    protected function paragraphContinue($Line, array $Block)
-    {
-        if (isset($Block['interrupted']))
-        {
-            return;
-        }
+	protected function paragraphContinue($Line, array $Block){
+		if (isset($Block['interrupted'])){
+			return;
+		}
 
-        $Block['element']['handler']['argument'] .= "\n".$Line['text'];
+		$Block['element']['handler']['argument'] .= "\n".$Line['text'];
 
-        return $Block;
-    }
+		return $Block;
+	}
 	/*
 	 * END: Block Element Processing
 	 */
@@ -1162,8 +1122,11 @@ class SourceParser{
 					$ActiveInlineTypes[$k] = $v;
 				}
 			}
+
+			if( strpos( '‾', $this->inlineMarkerList ) === false )
+				$this->inlineMarkerList = '‾' . $this->inlineMarkerList;
+
 		}
-// var_dump( $ActiveInlineTypes );
 
 		$nonNestables = (empty($nonNestables)
 			? array()
@@ -1173,6 +1136,7 @@ class SourceParser{
 		# $excerpt is based on the first occurrence of a marker
 		while ($excerpt = strpbrk($text, $this->inlineMarkerList)){
 			$marker = mb_substr( $excerpt, 0, 1 );
+
 			$markerPosition = strlen($text) - strlen($excerpt);
 
 			$Excerpt = array('text' => $excerpt, 'context' => $text);
@@ -1561,6 +1525,270 @@ class SourceParser{
 	/*
 	 * Liturgical Element Processing
 	 */
+	protected function blockLiturgicalResponse( $Line, array $CurrentBlock = null ){
+		// [V] or [R] 
+		if (preg_match('/^\[[V|R]\]/', $Line['text'], $matches)){
+			$element = $matches[0];
+
+			if( stripos( $element, 'V') !== false ){
+				$Type = 'versicle';
+			}else{
+				$Type = 'response';
+			}
+
+
+			$Text = mb_substr( $Line['text'], mb_strlen( $element ) );	// Trim off the marker
+
+			// <span class="symbol-versicle">&#8483;</span>
+			// <span class="symbol-response">&#8479;</span>
+
+			$Block = array(
+				'data' => array(
+					'lines' => 1,
+					'marker' => $element,
+				),
+				'element' => array(
+					'name' => 'section',
+					'attributes' => array(
+						'class' => 'response'
+					),
+					'elements' => array(),
+				),
+			);
+
+
+			$Block['element']['elements'][] =  array(
+					'name' => 'div',
+					'attributes' => array(
+						'class' => 'response-' . $Type,
+					),
+					'elements' => array(
+						array(
+							'name' => 'span',
+							'rawHtml' =>  $this->LiturgicalSymbols[$Type],
+							'allowRawHtmlInSafeMode' => true,
+							'attributes' => array(
+								'class' => 'symbol-' . $Type,
+							),
+						),
+						array(
+							'handler' => array(
+								'function' => 'lineElements',
+								'argument' => ' ' . $Text,
+								'destination' => 'elements',
+							),
+						)
+					),
+			);
+
+			return $Block;
+		}
+	}
+
+	protected function blockLiturgicalResponseContinue($Line, array $CurrentBlock){
+		if (preg_match('/^\[[V|R]\]/', $Line['text'], $matches)){
+			$element = $matches[0];
+
+			if( stripos( $element, 'V') !== false ){
+				$Type = 'versicle';
+			}else{
+				$Type = 'response';
+			}
+
+			++$CurrentBlock['data']['lines'];
+			$CurrentBlock['data']['marker'] = $element;
+
+			$Text = mb_substr( $Line['text'], mb_strlen( $element ) );	// Trim off the marker
+
+			$CurrentBlock['element']['elements'][] =  array(
+					'name' => 'div',
+					'attributes' => array(
+						'class' => 'response-' . $Type,
+					),
+					'elements' => array(
+						array(
+							'name' => 'span',
+							'rawHtml' =>  $this->LiturgicalSymbols[$Type],
+							'allowRawHtmlInSafeMode' => true,
+							'attributes' => array(
+								'class' => 'symbol-' . $Type,
+							),
+						),
+						array(
+							'handler' => array(
+								'function' => 'lineElements',
+								'argument' => ' ' . $Text,
+								'destination' => 'elements',
+							),
+						)
+					),
+			);
+
+			return $CurrentBlock;
+		}
+
+	}
+
+
+
+
+
+	protected function blockLiturgicalIntercession( $Line, array $CurrentBlock = null ){
+		// [II], [IR], [I1], or [I2]
+		if (preg_match('/^\[\I[I|R|1|2]\]/', $Line['text'], $matches)){
+			$element = $matches[0];
+			$this->intercessionResponse = null;
+
+			$Text = mb_substr( $Line['text'], mb_strlen( $element ) );	// Trim off the marker
+
+			$Block = array(
+				'data' => array(
+					'lines' => 1,
+					'marker' => $element,
+				),
+				'element' => array(
+					'name' => 'section',
+					'attributes' => array(
+						'class' => 'intercession'
+					),
+					'elements' => array(),
+				),
+			);
+
+			// $Block['element']['elements'][] =
+			$this->blockLiturgicalIntercessionFormat( $element, $Text, $Block );
+
+			return $Block;
+		}
+	}
+
+	protected function blockLiturgicalIntercessionFormat( $Element, $Text, &$BlockReference ){
+
+		switch( $Element ){
+			case '[II]':
+				$Type = 'introduction';
+				break;
+			case '[IR]':
+				$Type = 'response';
+				break;
+			case '[I1]':
+				$Type = 'part1';
+				break;
+			case '[I2]':
+				$Type = 'part2';
+				break;
+			default:
+				return;
+		}
+
+
+		if( $Type == 'introduction'){
+			$Elements = array(
+							array(
+								'handler' => array(
+									'function' => 'lineElements',
+									'argument' => ' ' . $Text,
+									'destination' => 'elements',
+								),
+							)
+						);
+			
+		}else if ( $Type == 'response' ){
+			$Elements = array(
+							array(
+								'name' => 'span',
+								'rawHtml' => '&nbsp;&nbsp;&nbsp;&nbsp;',
+								'allowRawHtmlInSafeMode' => true,
+								'attributes' => array(
+									'class' => 'spacer',
+								),
+							),
+							array(
+								'handler' => array(
+									'function' => 'lineElements',
+									'argument' => $Text,
+									'destination' => 'elements',
+								),
+							)
+						);
+		}else if ( $Type == 'part1' ){
+			$Elements = array(
+							// array(
+							// 	'name' => 'span',
+							// 	'text' =>  ' ',
+							// 	'attributes' => array(
+							// 		'class' => 'spacer',
+							// 	),
+							// ),
+							array(
+								'handler' => array(
+									'function' => 'lineElements',
+									'argument' => $Text,
+									'destination' => 'elements',
+								),
+							)
+						);
+		}else if ( $Type == 'part2' ){
+			$Elements = array(
+							array(
+								'name' => 'span',
+								'rawHtml' => '&nbsp;&nbsp;&nbsp;&nbsp;– ',
+								'allowRawHtmlInSafeMode' => true,
+								// 'text' =>  
+								'attributes' => array(
+									'class' => 'spacer',
+								),
+							),
+							array(
+								'handler' => array(
+									'function' => 'lineElements',
+									'argument' => $Text,
+									'destination' => 'elements',
+								),
+							)
+						);
+		}
+
+		$ThisBlock =  array(
+				'name' => 'div',
+				'attributes' => array(
+					'class' => 'part-' . $Type,
+				),
+				'elements' => $Elements
+		);
+
+		if ( $Type == 'response' ){
+			$this->intercessionResponse = $ThisBlock;
+		}
+
+		$BlockReference['element']['elements'][] = $ThisBlock;
+
+		if( $Type == 'part2' ){
+			// Add the Response again
+			$BlockReference['element']['elements'][] = $this->intercessionResponse;
+		}
+		
+
+		return;
+		// return $Elements;
+	}
+
+	protected function blockLiturgicalIntercessionContinue($Line, array $CurrentBlock){
+		if (preg_match('/^\[\I[I|R|1|2]\]/', $Line['text'], $matches)){
+			$element = $matches[0];
+
+			++$CurrentBlock['data']['lines'];
+			$CurrentBlock['data']['marker'] = $element;
+
+			$Text = mb_substr( $Line['text'], mb_strlen( $element ) );	// Trim off the marker
+
+			$this->blockLiturgicalIntercessionFormat( $element, $Text, $CurrentBlock );
+
+			return $CurrentBlock;
+		}
+
+	}
+
 	protected function inlineLiturgicalCross($Excerpt){
 		$Element = array(
 			'rawHtml' => "&#10011;",
@@ -1705,12 +1933,12 @@ class SourceParser{
 			$Element['text'] = $matches[1];
 			$Element['attributes']['class'] = 'text-overline';
 
-		}else if( preg_match('/^_((.|\n)*?)_/', $remainder, $matches) ){
+		// }else if( preg_match('/^_((.|\n)*?)_/', $remainder, $matches) ){
+		}else if ( preg_match('/^_((?:\\\\_|[^_]|__[^_]*__)+?)_(?!_)\b/us', $remainder, $matches) ){
 			$extent += strlen($matches[0]);
 			$remainder = substr($remainder, $extent);
 			$Element['text'] = $matches[1];
 			$Element['attributes']['class'] = 'text-underline';
-
 		}else{
 			return;
 		}
@@ -2059,6 +2287,24 @@ class SourceParser{
 					'sup', 'ruby',
 					'var', 'span',
 					'wbr', 'time',
+	);
+
+	protected $safeLinksWhitelist = array(
+		'http://',
+		'https://',
+		'ftp://',
+		'ftps://',
+		'mailto:',
+		'tel:',
+		'data:image/png;base64,',
+		'data:image/gif;base64,',
+		'data:image/jpeg;base64,',
+		'irc:',
+		'ircs:',
+		'git:',
+		'ssh:',
+		'news:',
+		'steam:',
 	);
 	/*
 	 * END: Read-Only Reference Data

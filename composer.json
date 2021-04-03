@@ -1,7 +1,8 @@
 {
-    "name": "urbanmonastics/textformater-php",
-    "description": "Format Source Texts from the Urban Monastic library.",
-    "homepage": "http://developers.urbanmonastic.org/",
+    "name": "urbanmonastics/sourceparser",
+    "description": "A Fast Markdown Parser extended for Liturgy in PHP.",
+    "keywords": ["markdown", "liturgy", "parser"],
+    "homepage": "http://developers.urbanmonastic.org/sourceparser/",
     "type": "library",
     "license": "MIT",
     "authors": [
@@ -18,6 +19,14 @@
         "phpunit/phpunit": "^9.5"
     },
     "autoload": {
-            "psr-0": {"SourceParser": ""}
+        "psr-0": {"SourceParser": ""}
+    },
+    "autoload-dev": {
+        "psr-0": {
+            "TestSourceParser": "test/",
+            "SourceParserTest": "test/",
+            "CommonMarkTest": "test/",
+            "CommonMarkTestWeak": "test/"
+        }
     }
 }
