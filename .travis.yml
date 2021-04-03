@@ -27,5 +27,5 @@ install:
 script:
   - vendor/bin/phpunit
   - vendor/bin/phpunit test || true
-  - vendor/bin/phpunit test/CommonMarkTestWeak.php || true
+  # - vendor/bin/phpunit test/CommonMarkTestWeak.php || true
   - '[ -z "$TRAVIS_TAG" ] || [ "$TRAVIS_TAG" == "$(php -r "require(\"SourceParser.php\"); echo SourceParser::version;")" ]'
