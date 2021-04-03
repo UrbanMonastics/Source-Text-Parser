@@ -53,7 +53,7 @@ class SourceParser{
 	/*
 	 *	Establish the variables
 	 */
-	protected $breaksEnabled = true;	// Convert \r\n into line breaks.
+	protected $breaksEnabled = false;	// Convert \r\n into line breaks.
 	protected $markupEscaped = false;	// Escape any HTML syntax in the text (if true convert < into &lt;).
 	protected $urlsLinked = true;		// Convert any URL into a link
 	protected $safeMode = false;	// How strict are we about raw HTML code

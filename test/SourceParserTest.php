@@ -33,8 +33,6 @@ class SourceParserTest extends TestCase
     protected function initSourceParser()
     {
         $SourceParser = new TestSourceParser();
-        $SourceParser->setBreaksEnabled(false);
-
         return $SourceParser;
     }
 
