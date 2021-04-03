@@ -1,4 +1,6 @@
 # Source Parser in PHP
+[![Build Status](https://travis-ci.com/UrbanMonastics/SourceParser.svg)](https://travis-ci.com/UrbanMonastics/SourceParser)
+
 A Fast Markdown Parser extended for Liturgy in PHP. This is a formatting library for the specific styling and formats of the Source Texts available from Urban Monastics.  
   
 The source texts use a subset of the Markdown functionality, and include some additional features. To make these texts more approachable and useful to others we wanted to publish a library which makes formatting them simple and direct. This library is based upon [Parsedown](https://github.com/erusev/parsedown) by [Emanuil Rusev](http://erusev.com).  
