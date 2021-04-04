@@ -58,6 +58,7 @@ class SourceParser{
 	protected $urlsLinked = true;		// Convert any URL into a link
 	protected $safeMode = false;	// How strict are we about raw HTML code
 	protected $strictMode;
+	protected $preserveIndentations = false;	// Do we add spacers to perserve indentations
 	protected $liturgicalElements = false;	// Look for liturgical elements in the text
 	protected $liturgicalHTML = true;	// Do we wrap liturgical elements in HTML tags
 	protected $suppressAlleluia = false;	// Do we remove the word Alleluia from the text
@@ -173,6 +174,17 @@ class SourceParser{
 		return $this;
 	}
 
+	public function setPreserveIndentations(bool $preserveIndentations){
+		$this->preserveIndentations = $preserveIndentations;
+		
+		if( $preserveIndentations )
+			$this->unmarkedBlockTypes = array();
+		else 
+			$this->unmarkedBlockTypes = array('Code');
+
+		return $this;
+	}
+
 	public function setLiturgicalElements(bool $liturgicalElements){
 		$this->liturgicalElements = $liturgicalElements;
 
@@ -276,6 +288,25 @@ class SourceParser{
 			$indent = strspn($line, ' ');
 
 			$text = $indent > 0 ? substr($line, $indent) : $line;
+
+			if( $this->preserveIndentations && $indent >= 4 ){
+				$tabs = floor( $indent / 4 );
+
+				do{
+					if( $tabs >= 2 && $this->liturgicalHTML ){
+						$text = '<span class="spacer-tab-x2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>' . $text;
+						$tabs = $tabs - 2;
+					}else{
+						if( $this->liturgicalHTML )
+							$text = '<span class="spacer-tab">&nbsp;&nbsp;&nbsp;&nbsp;</span>' . $text;
+						else
+							$text = '&nbsp;&nbsp;&nbsp;&nbsp;' . $text;
+
+						--$tabs;
+					}
+				}
+				while( $tabs > 0 );
+			}
 
 			# ~
 
@@ -1833,7 +1864,7 @@ class SourceParser{
 
 		$extent = 0;
 		$remainder = $Excerpt['text'];
-// return;
+
 		if( preg_match('/^\[\*\]/', $remainder, $matches) ){
 			$extent += strlen($matches[0]);
 			$remainder = substr($remainder, $extent);
