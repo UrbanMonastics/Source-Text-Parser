@@ -1805,7 +1805,7 @@ class SourceParser{
 		$extent = 0;
 		$remainder = $Excerpt['text'];
 
-		if( preg_match('/\[\+\]/', $remainder, $matches) ){
+		if( preg_match('/^\[\+\]/', $remainder, $matches) ){
 			$extent += strlen($matches[0]);
 			$remainder = substr($remainder, $extent);
 		}else{
@@ -1821,7 +1821,7 @@ class SourceParser{
 	
 	protected function inlineLiturgicalMidpoint( $Excerpt ){
 		$Element = array(
-			'rawHtml' => "*",
+			'text' => "*",
 			// 'allowRawHtmlInSafeMode' => true,
 		);
 		if( $this->liturgicalHTML ){
@@ -1833,8 +1833,8 @@ class SourceParser{
 
 		$extent = 0;
 		$remainder = $Excerpt['text'];
-
-		if( preg_match('/\[\*\]/', $remainder, $matches) ){
+// return;
+		if( preg_match('/^\[\*\]/', $remainder, $matches) ){
 			$extent += strlen($matches[0]);
 			$remainder = substr($remainder, $extent);
 		}else{
@@ -1863,7 +1863,7 @@ class SourceParser{
 		$extent = 0;
 		$remainder = $Excerpt['text'];
 
-		if( preg_match('/\[t\]/', $remainder, $matches) ){
+		if( preg_match('/^\[t\]/', $remainder, $matches) ){
 			$extent += strlen($matches[0]);
 			$remainder = substr($remainder, $extent);
 		}else{
