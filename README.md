@@ -85,10 +85,18 @@ These texts may need to be used in various formats and contexts. There are going
 
 ### Methods
 
+*	**setSafeMode( *bool* )** default: false  
+	When enabled will ensure that output cannot execute code.
+*	**setStrictMode( *bool* )**	default: false  
+	When enabled it requires headers not start with a space....
 *	**setBreaksEnabled( *bool* )** default: false  
 	When enabled it will transform new line markers `\n` into `<br>`. 
 *	**setMarkupEscaped( *bool* )** default: false  
 	When enabled it will escape any existing HTML syntax within the documents.  
+*	**setUrlsLinked( *bool* )**  
+	When enabled it will convert inline URL strings into clickable links.
+*	**setPreserveIndentations( *bool* )** default: false  
+	When enabled this will convert any tabs (set of 4 spaces) into four double spaces wrapped in a span. Enabling this will disable tabbing for code blocks.
 *	**setLiturgicalElements( *bool* )** default: false  
 	When enabled the standard Markdown will be supplemented with liturgical elements. See Extending Markdown above for additions
 *	**setLiturgicalHTML( *bool* )** default: true  

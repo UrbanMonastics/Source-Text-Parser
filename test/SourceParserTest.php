@@ -55,6 +55,7 @@ class SourceParserTest extends TestCase
 
 		// Add support for Liturgical Elements
         $this->SourceParser->setLiturgicalElements(substr($test, 0, 7) === 'liturgy');
+        $this->SourceParser->setPreserveIndentations(substr($test, 0, 11) === 'indentation');
 
         $actualMarkup = $this->SourceParser->text( $markdown );
 
