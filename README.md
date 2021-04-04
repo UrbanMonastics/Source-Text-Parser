@@ -132,6 +132,9 @@ To make it easier to develop and build out the SourceParser we have setup a loca
 	# To stop/shutdown the container
 	./docker/stop.sh
 	
+	# To run the PHPUnit tests in /test/SourceParserTest.php
+	./docker/phpunit.sh
+	
 	# To attach to the running container
 	./docker/attach.sh
 	
