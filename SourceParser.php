@@ -58,6 +58,7 @@ class SourceParser{
 	protected $urlsLinked = true;		// Convert any URL into a link
 	protected $safeMode = false;	// How strict are we about raw HTML code
 	protected $strictMode;
+	protected $preserveIndentations = false;	// Do we add spacers to perserve indentations
 	protected $liturgicalElements = false;	// Look for liturgical elements in the text
 	protected $liturgicalHTML = true;	// Do we wrap liturgical elements in HTML tags
 	protected $suppressAlleluia = false;	// Do we remove the word Alleluia from the text
@@ -173,6 +174,17 @@ class SourceParser{
 		return $this;
 	}
 
+	public function setPreserveIndentations(bool $preserveIndentations){
+		$this->preserveIndentations = $preserveIndentations;
+		
+		if( $preserveIndentations )
+			$this->unmarkedBlockTypes = array();
+		else 
+			$this->unmarkedBlockTypes = array('Code');
+
+		return $this;
+	}
+
 	public function setLiturgicalElements(bool $liturgicalElements){
 		$this->liturgicalElements = $liturgicalElements;
 
@@ -276,6 +288,25 @@ class SourceParser{
 			$indent = strspn($line, ' ');
 
 			$text = $indent > 0 ? substr($line, $indent) : $line;
+
+			if( $this->preserveIndentations && $indent >= 4 ){
+				$tabs = floor( $indent / 4 );
+
+				do{
+					if( $tabs >= 2 && $this->liturgicalHTML ){
+						$text = '<span class="spacer-tab-x2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>' . $text;
+						$tabs = $tabs - 2;
+					}else{
+						if( $this->liturgicalHTML )
+							$text = '<span class="spacer-tab">&nbsp;&nbsp;&nbsp;&nbsp;</span>' . $text;
+						else
+							$text = '&nbsp;&nbsp;&nbsp;&nbsp;' . $text;
+
+						--$tabs;
+					}
+				}
+				while( $tabs > 0 );
+			}
 
 			# ~
 
@@ -1141,6 +1172,10 @@ class SourceParser{
 
 			$Excerpt = array('text' => $excerpt, 'context' => $text);
 
+			if( !array_key_exists( $marker, $ActiveInlineTypes ) || !is_array( $ActiveInlineTypes[$marker] ) ){
+				$ActiveInlineTypes[$marker] = array();
+			}
+
 			foreach($ActiveInlineTypes[$marker] as $inlineType){
 				# check to see if the current inline type is nestable in the current context
 
@@ -1647,13 +1682,15 @@ class SourceParser{
 					'marker' => $element,
 				),
 				'element' => array(
-					'name' => 'section',
-					'attributes' => array(
-						'class' => 'intercession'
-					),
+					'name' => 'p',
 					'elements' => array(),
 				),
 			);
+
+			if( $this->liturgicalHTML ){
+				$Block['element']['name'] = 'section';
+				$Block['element']['attributes']['class'] = 'intercession';
+			}
 
 			// $Block['element']['elements'][] =
 			$this->blockLiturgicalIntercessionFormat( $element, $Text, $Block );
@@ -1682,27 +1719,11 @@ class SourceParser{
 		}
 
 
+		$Text = trim( $Text );
+
+
 		if( $Type == 'introduction'){
 			$Elements = array(
-							array(
-								'handler' => array(
-									'function' => 'lineElements',
-									'argument' => ' ' . $Text,
-									'destination' => 'elements',
-								),
-							)
-						);
-			
-		}else if ( $Type == 'response' ){
-			$Elements = array(
-							array(
-								'name' => 'span',
-								'rawHtml' => '&nbsp;&nbsp;&nbsp;&nbsp;',
-								'allowRawHtmlInSafeMode' => true,
-								'attributes' => array(
-									'class' => 'spacer',
-								),
-							),
 							array(
 								'handler' => array(
 									'function' => 'lineElements',
@@ -1711,15 +1732,35 @@ class SourceParser{
 								),
 							)
 						);
+			
+		}else if ( $Type == 'response' ){
+			$Elements = array(
+							array(
+								// 'name' => 'span',
+								'rawHtml' => '&nbsp;&nbsp;&nbsp;&nbsp;',
+								'allowRawHtmlInSafeMode' => true,
+								// 'attributes' => array(
+								// 	'class' => 'spacer',
+								// ),
+							),
+							array(
+								'name' => 'em',
+								'handler' => array(
+									'function' => 'lineElements',
+									'argument' => $Text,
+									'destination' => 'elements',
+								),
+							)
+						);
+
+			if( $this->liturgicalHTML ){
+				$Elements[0]['name'] = 'span';
+				$Elements[0]['attributes']['class'] = 'spacer';
+				unset( $Elements[1]['name'] );
+			}
+
 		}else if ( $Type == 'part1' ){
 			$Elements = array(
-							// array(
-							// 	'name' => 'span',
-							// 	'text' =>  ' ',
-							// 	'attributes' => array(
-							// 		'class' => 'spacer',
-							// 	),
-							// ),
 							array(
 								'handler' => array(
 									'function' => 'lineElements',
@@ -1731,13 +1772,12 @@ class SourceParser{
 		}else if ( $Type == 'part2' ){
 			$Elements = array(
 							array(
-								'name' => 'span',
+								// 'name' => 'span',
 								'rawHtml' => '&nbsp;&nbsp;&nbsp;&nbsp;– ',
 								'allowRawHtmlInSafeMode' => true,
-								// 'text' =>  
-								'attributes' => array(
-									'class' => 'spacer',
-								),
+								// 'attributes' => array(
+								// 	'class' => 'spacer',
+								// ),
 							),
 							array(
 								'handler' => array(
@@ -1747,30 +1787,60 @@ class SourceParser{
 								),
 							)
 						);
+
+			if( $this->liturgicalHTML ){
+				$Elements[0]['name'] = 'span';
+				$Elements[0]['attributes']['class'] = 'spacer';
+				unset( $Elements[1]['name'] );
+			}
 		}
 
-		$ThisBlock =  array(
-				'name' => 'div',
-				'attributes' => array(
-					'class' => 'part-' . $Type,
-				),
-				'elements' => $Elements
-		);
+
+
+		if( $this->liturgicalHTML ){
+			$ThisBlock =  array(
+					'name' => 'div',
+					'attributes' => array(
+						'class' => 'part-' . $Type,
+					),
+					'elements' => $Elements
+			);
+		}else{
+			$ThisBlock = $Elements;
+			$ThisBlock[] = array('name' => 'br');
+		}
 
 		if ( $Type == 'response' ){
 			$this->intercessionResponse = $ThisBlock;
 		}
 
-		$BlockReference['element']['elements'][] = $ThisBlock;
+
+
+		if( $this->liturgicalHTML ){
+			$BlockReference['element']['elements'][] = $ThisBlock;
+		}else{
+			foreach( $ThisBlock as $a ){
+				$BlockReference['element']['elements'][] = $a;
+			}
+		}
+
+
+		// var_dump( $BlockReference );
 
 		if( $Type == 'part2' ){
 			// Add the Response again
-			$BlockReference['element']['elements'][] = $this->intercessionResponse;
+			// $BlockReference['element']['elements'][] = $this->intercessionResponse;
+			if( $this->liturgicalHTML ){
+				$BlockReference['element']['elements'][] = $this->intercessionResponse;
+			}else{
+				foreach( $this->intercessionResponse as $a ){
+					$BlockReference['element']['elements'][] = $a;
+				}
+			}
 		}
 		
 
 		return;
-		// return $Elements;
 	}
 
 	protected function blockLiturgicalIntercessionContinue($Line, array $CurrentBlock){
@@ -1789,6 +1859,18 @@ class SourceParser{
 
 	}
 
+	protected function blockLiturgicalIntercessionComplete(array $CurrentBlock){
+		// Remove the trailing <br> from the non-HTML version
+		if( $this->liturgicalHTML == false ){
+			$Elements = count( $CurrentBlock['element']['elements'] );
+			if( $CurrentBlock['element']['elements'][ $Elements - 1]['name'] == 'br'){
+				unset( $CurrentBlock['element']['elements'][$Elements-1] );
+			}
+		}
+
+		return $CurrentBlock;
+	}
+
 	protected function inlineLiturgicalCross($Excerpt){
 		$Element = array(
 			'rawHtml' => "&#10011;",
@@ -1805,7 +1887,7 @@ class SourceParser{
 		$extent = 0;
 		$remainder = $Excerpt['text'];
 
-		if( preg_match('/\[\+\]/', $remainder, $matches) ){
+		if( preg_match('/^\[\+\]/', $remainder, $matches) ){
 			$extent += strlen($matches[0]);
 			$remainder = substr($remainder, $extent);
 		}else{
@@ -1821,7 +1903,7 @@ class SourceParser{
 	
 	protected function inlineLiturgicalMidpoint( $Excerpt ){
 		$Element = array(
-			'rawHtml' => "*",
+			'text' => " *",	// Include the space to ensure it always has a space to the left (multiple spaces will collapse)
 			// 'allowRawHtmlInSafeMode' => true,
 		);
 		if( $this->liturgicalHTML ){
@@ -1834,7 +1916,7 @@ class SourceParser{
 		$extent = 0;
 		$remainder = $Excerpt['text'];
 
-		if( preg_match('/\[\*\]/', $remainder, $matches) ){
+		if( preg_match('/^\[\*\]/', $remainder, $matches) ){
 			$extent += strlen($matches[0]);
 			$remainder = substr($remainder, $extent);
 		}else{
@@ -1850,7 +1932,7 @@ class SourceParser{
 
 	protected function inlineLiturgicalDagger( $Excerpt ){
 		$Element = array(
-			'rawHtml' => "&#8224;",
+			'rawHtml' => " &#8224;", // Include the space to ensure it always has a space to the left (multiple spaces will collapse)
 			'allowRawHtmlInSafeMode' => true,
 		);
 		if( $this->liturgicalHTML ){
@@ -1863,7 +1945,7 @@ class SourceParser{
 		$extent = 0;
 		$remainder = $Excerpt['text'];
 
-		if( preg_match('/\[t\]/', $remainder, $matches) ){
+		if( preg_match('/^\[t\]/', $remainder, $matches) ){
 			$extent += strlen($matches[0]);
 			$remainder = substr($remainder, $extent);
 		}else{
@@ -1922,7 +2004,7 @@ class SourceParser{
 		$extent = 0;
 		$remainder = $Excerpt['text'];
 
-		if( preg_match('/^_‾|‾_((.|\n)*?)_‾|‾_/u', $remainder, $matches) ){
+		if( preg_match('/^(?:_‾|‾_)((.|\n)*?)(?:‾_|_‾)/u', $remainder, $matches) ){
 			$extent += strlen($matches[0]);
 			$remainder = substr($remainder, $extent);
 			$Element['text'] = $matches[1];
@@ -1932,8 +2014,6 @@ class SourceParser{
 			$remainder = substr($remainder, $extent);
 			$Element['text'] = $matches[1];
 			$Element['attributes']['class'] = 'text-overline';
-
-		// }else if( preg_match('/^_((.|\n)*?)_/', $remainder, $matches) ){
 		}else if ( preg_match('/^_((?:\\\\_|[^_]|__[^_]*__)+?)_(?!_)\b/us', $remainder, $matches) ){
 			$extent += strlen($matches[0]);
 			$remainder = substr($remainder, $extent);
