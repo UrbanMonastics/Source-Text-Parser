@@ -4,4 +4,4 @@
 #git submodule update --remote
 
 # update composer libraries
-docker exec -it textformater_nginx_php composer update
+docker exec -it sourceparser_nginx_php composer update

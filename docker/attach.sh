@@ -1,2 +1,2 @@
 #!/bin/bash
-docker exec -it textformater_nginx_php /bin/ash
+docker exec -it sourceparser_nginx_php /bin/ash
