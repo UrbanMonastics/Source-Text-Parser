@@ -12,6 +12,7 @@ services:
       - ./:/var/www/html
       - ./docker/nginx/error.log:/var/log/nginx/error.log
       - ./docker/nginx/access.log:/var/log/nginx/access.log
+      - ./../Source-Texts:/var/www/html/Source-Texts
     environment:
       APP_ENV: development
       ERRORS: 1
