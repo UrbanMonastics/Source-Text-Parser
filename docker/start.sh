@@ -9,7 +9,7 @@ then
 fi
 
 # start in the background
-docker-compose up -d
+docker compose up -d
 
 echo
 echo "You can connect from your development (host) machine to these services:"
