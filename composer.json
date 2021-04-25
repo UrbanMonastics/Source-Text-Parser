@@ -1,7 +1,7 @@
 {
     "name": "urbanmonastics/sourceparser",
     "description": "A Fast Markdown Parser extended for Liturgy in PHP.",
-    "keywords": ["markdown", "liturgy", "parser"],
+    "keywords": ["markdown", "parser", "liturgy", "bible", "scripture"],
     "homepage": "http://developers.urbanmonastic.org/sourceparser/",
     "type": "library",
     "license": "MIT",
