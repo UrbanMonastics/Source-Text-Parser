@@ -57,7 +57,7 @@ Or download the latest release and include `SourceParser.php`
 In the most simple approach you can pass text to be parsed.  
 
 ```php
-$SourceParser = new SourceParser();
+$SourceParser = new /UrbanMonastics/SourceParser();
 
 echo $SourceParser->text("Hello *Source Parser*!");  # prints: <p>Hello <em>Source Parser</em>!</p>
 ```
