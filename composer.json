@@ -1,7 +1,7 @@
 {
     "name": "urbanmonastics/sourceparser",
     "description": "A Fast Markdown Parser extended for Liturgy in PHP.",
-    "keywords": ["markdown", "liturgy", "parser"],
+    "keywords": ["markdown", "parser", "liturgy", "bible", "scripture"],
     "homepage": "http://developers.urbanmonastic.org/sourceparser/",
     "type": "library",
     "license": "MIT",
@@ -19,7 +19,7 @@
         "phpunit/phpunit": ">=4.8.35"
     },
     "autoload": {
-        "psr-0": {"SourceParser": ""}
+        "psr-4": {"UrbanMonastics\\SourceParser\\": ""}
     },
     "autoload-dev": {
         "psr-0": {

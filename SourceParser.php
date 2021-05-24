@@ -12,6 +12,8 @@
  *	
  ***********/
 
+namespace UrbanMonastics;
+
 class SourceParser{
 
 
