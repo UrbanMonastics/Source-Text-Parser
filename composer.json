@@ -19,7 +19,11 @@
         "phpunit/phpunit": ">=4.8.35"
     },
     "autoload": {
-        "psr-4": {"UrbanMonastics\\SourceParser\\": ""}
+        "psr-4": {"UrbanMonastics\\SourceParser\\": ""},
+        "exclude-from-classmap": [
+            "/docker/",
+            "/test/"
+        ]
     },
     "autoload-dev": {
         "psr-0": {

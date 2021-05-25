@@ -12,7 +12,7 @@
  *	
  ***********/
 
-namespace UrbanMonastics;
+namespace UrbanMonastics\SourceParser;
 
 class SourceParser{
 
