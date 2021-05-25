@@ -8,7 +8,13 @@
     "authors": [
         {
             "name": "Paul Prins",
+            "role": "Developer",
+            "homepage": "https://paul.build/",
             "email": "paulprins@gmail.com"
+        },
+        {
+            "name": "Urban Monastics",
+            "homepage": "https://developers.urbanmonastic.org/"
         }
     ],
     "require": {
@@ -19,7 +25,11 @@
         "phpunit/phpunit": ">=4.8.35"
     },
     "autoload": {
-        "psr-4": {"UrbanMonastics\\SourceParser\\": ""}
+        "psr-4": {"UrbanMonastics\\SourceParser\\": ""},
+        "exclude-from-classmap": [
+            "/docker/",
+            "/test/"
+        ]
     },
     "autoload-dev": {
         "psr-0": {

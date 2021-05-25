@@ -1,1 +1,4 @@
-test
+/docker      export-ignore
+/test        export-ignore
+/docker-compose.yml      export-ignore
+/Dockerfile      export-ignore
