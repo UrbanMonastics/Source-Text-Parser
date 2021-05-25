@@ -18,7 +18,7 @@ class SourceParser{
 
 
 	// Establish the version of the library
-	const version = '0.1';
+	const version = '0.3';
 
 
 	/**
