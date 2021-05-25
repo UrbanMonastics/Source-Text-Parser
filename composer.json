@@ -8,7 +8,13 @@
     "authors": [
         {
             "name": "Paul Prins",
+            "role": "Developer",
+            "homepage": "https://paul.build/",
             "email": "paulprins@gmail.com"
+        },
+        {
+            "name": "Urban Monastics",
+            "homepage": "https://developers.urbanmonastic.org/"
         }
     ],
     "require": {
