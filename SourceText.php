@@ -14,7 +14,7 @@
 
 namespace UrbanMonastics\SourceParser;
 
-use UrbanMonastics\SourceParser as SourceParser;
+use UrbanMonastics\SourceParser\SourceParser as SourceParser;
 use UrbanMonastics\SourceParser\Controllers\Index as IndexController;
 use UrbanMonastics\SourceParser\Controllers\Languages as LanguageController;
 use UrbanMonastics\SourceParser\Controllers\Texts as TextController;

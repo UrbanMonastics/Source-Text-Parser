@@ -18,7 +18,7 @@ class SourceParser{
 
 
 	// Establish the version of the library
-	const version = '0.1';
+	const version = '0.3';
 
 
 	/**
@@ -67,7 +67,7 @@ class SourceParser{
 	protected $footnotesEnabled = false;	// Look for footnotes in the source
 	protected $titlesEnabled = false;	// Look for titles in the source
 	protected $intercessionResponse;	// Used for Caching the response to the intercession intentions to make placing it easier.
-	protected $responseResponse;	// Used for Caching the response to the intercession intentions to make placing it easier.
+	protected $responseResponse;		// Used for Caching the response to the reading response to make placing it easier.
 
 	private static $instances = array();
 	protected $DefinitionData;
@@ -1566,6 +1566,7 @@ class SourceParser{
 		// [V] or [R] 
 		if (preg_match('/^\[[V|R]\]/', $Line['text'], $matches)){
 			$element = $matches[0];
+			$this->responseResponse = array('PreviousLine' => NULL, 'ResponseNode' => NULL);
 
 			if( stripos( $element, 'V') !== false ){
 				$Type = 'versicle';
@@ -1594,7 +1595,7 @@ class SourceParser{
 			);
 
 
-			$Block['element']['elements'][] =  array(
+			$Block['element']['elements'][] = $TempNode = array(
 					'name' => 'div',
 					'attributes' => array(
 						'class' => 'response-' . $Type,
@@ -1618,11 +1619,16 @@ class SourceParser{
 					),
 			);
 
+
+			$this->responseResponse['PreviousLine'] = $Type;
+			if( $Type == 'response' )
+				$this->responseResponse['ResponseNode'] = $TempNode;
+
 			return $Block;
 		}
 	}
 
-	protected function blockLiturgicalResponseContinue($Line, array $CurrentBlock){
+	protected function blockLiturgicalResponseContinue( $Line, array $CurrentBlock){
 		if (preg_match('/^\[[V|R]\]/', $Line['text'], $matches)){
 			$element = $matches[0];
 
@@ -1632,12 +1638,20 @@ class SourceParser{
 				$Type = 'response';
 			}
 
+
+			// Place the Response before this line if it was not included previously
+			if( !is_null( $this->responseResponse['ResponseNode'] ) && $Type == 'versicle' && $this->responseResponse['PreviousLine'] == 'versicle'){
+				
+				$CurrentBlock['element']['elements'][] = $this->responseResponse['ResponseNode'];
+			}
+
+
 			++$CurrentBlock['data']['lines'];
 			$CurrentBlock['data']['marker'] = $element;
 
 			$Text = mb_substr( $Line['text'], mb_strlen( $element ) );	// Trim off the marker
 
-			$CurrentBlock['element']['elements'][] =  array(
+			$CurrentBlock['element']['elements'][] = $TempNode = array(
 					'name' => 'div',
 					'attributes' => array(
 						'class' => 'response-' . $Type,
@@ -1661,9 +1675,23 @@ class SourceParser{
 					),
 			);
 
+
+			$this->responseResponse['PreviousLine'] = $Type;
+			if( $Type == 'response' )
+				$this->responseResponse['ResponseNode'] = $TempNode;
+
 			return $CurrentBlock;
 		}
 
+	}
+
+	protected function blockLiturgicalResponseComplete(array $CurrentBlock){
+		// Remove the trailing <br> from the non-HTML version
+		if( !is_null( $this->responseResponse['ResponseNode'] ) && $this->responseResponse['PreviousLine'] == 'versicle'){
+			$CurrentBlock['element']['elements'][] = $this->responseResponse['ResponseNode'];
+		}
+
+		return $CurrentBlock;
 	}
 
 
