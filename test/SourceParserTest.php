@@ -3,6 +3,7 @@
 require 'SampleExtensions.php';
 
 use PHPUnit\Framework\TestCase;
+use UrbanMonastics\SourceParser\SourceParser as SourceParser;
 
 class SourceParserTest extends TestCase
 {
@@ -188,12 +189,12 @@ EXPECTED_HTML;
     public function testLateStaticBinding()
     {
         $SourceParser = SourceParser::instance();
-        $this->assertInstanceOf('SourceParser', $SourceParser);
+        $this->assertInstanceOf('UrbanMonastics\SourceParser\SourceParser', $SourceParser);
 
         // After instance is already called on SourceParser
         // subsequent calls with the same arguments return the same instance
         $sameSourceParser = TestSourceParser::instance();
-        $this->assertInstanceOf('SourceParser', $sameSourceParser);
+        $this->assertInstanceOf('UrbanMonastics\SourceParser\SourceParser', $sameSourceParser);
         $this->assertSame($SourceParser, $sameSourceParser);
 
         $testSourceParser = TestSourceParser::instance('test late static binding');

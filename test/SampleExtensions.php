@@ -1,5 +1,7 @@
 <?php
 
+use UrbanMonastics\SourceParser\SourceParser as SourceParser;
+
 class UnsafeExtension extends SourceParser
 {
     protected function blockFencedCodeComplete($Block)
