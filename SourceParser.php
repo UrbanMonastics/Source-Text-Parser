@@ -2034,9 +2034,7 @@ class SourceParser{
 
 
 		// Check that the SelahTerm is located on it's own line, or else do not do anything
-		var_dump( explode( "\n", $Excerpt['text'] )[0] );
 		$After = substr( $Excerpt['text'], strlen( $SelahTerm ) );
-		var_dump( $After );
 		if( trim( strtolower( explode( "\n", $Excerpt['text'] )[0] ) ) !== $SelahTerm ){
 			return array(
 				'extent' => $extent,
