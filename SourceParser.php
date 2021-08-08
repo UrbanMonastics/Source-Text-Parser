@@ -60,7 +60,7 @@ class SourceParser{
 	protected $safeMode = false;	// How strict are we about raw HTML code
 	protected $strictMode;
 	protected $preserveIndentations = false;	// Do we add spacers to perserve indentations
-	protected $liturgicalElements = false;	// Look for liturgical elements in the text
+	protected $liturgicalElements = true;	// Look for liturgical elements in the text
 	protected $liturgicalHTML = true;	// Do we wrap liturgical elements in HTML tags
 	protected $suppressAlleluia = false;	// Do we remove the word Alleluia from the text
 	protected $selahHTML = false;	// Do we wrap selah in HTML for fancy rendering

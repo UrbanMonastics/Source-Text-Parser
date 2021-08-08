@@ -97,7 +97,7 @@ These texts may need to be used in various formats and contexts. There are going
 	When enabled it will convert inline URL strings into clickable links.
 *	**setPreserveIndentations( *bool* )** default: false  
 	When enabled this will convert any tabs (set of 4 spaces) into four double spaces wrapped in a span. Enabling this will disable tabbing for code blocks.
-*	**setLiturgicalElements( *bool* )** default: false  
+*	**setLiturgicalElements( *bool* )** default: true  
 	When enabled the standard Markdown will be supplemented with liturgical elements. See Extending Markdown above for additions
 *	**setLiturgicalHTML( *bool* )** default: true  
 	Do we place liturgical markers within HTML tags, or just place them directly into the document.
