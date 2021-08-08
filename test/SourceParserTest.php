@@ -55,9 +55,11 @@ class SourceParserTest extends TestCase
         $this->SourceParser->setStrictMode(substr($test, 0, 6) === 'strict');
 
 		// Add support for Liturgical Elements
-        $this->SourceParser->setLiturgicalElements(substr($test, 0, 7) === 'liturgy');
-        $this->SourceParser->setPreserveIndentations(substr($test, 0, 11) === 'indentation');
-        $this->SourceParser->setLiturgicalHTML( strpos($test, '_lesstags_') === false );
+        $this->SourceParser->setLiturgicalElements(substr( $test, 0, 7) === 'liturgy');
+        $this->SourceParser->setPreserveIndentations(substr( $test, 0, 11) === 'indentation');
+        $this->SourceParser->setLiturgicalHTML( strpos( $test, '_lesstags_') === false );
+        $this->SourceParser->setSelahHTML( stripos( $test, 'selah' ) !== false );
+		
 
         $actualMarkup = $this->SourceParser->text( $markdown );
 

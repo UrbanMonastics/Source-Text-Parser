@@ -25,7 +25,6 @@ class SourceParser{
 	 * Format the text and return it
 	 *
 	 * @param  string	$Text		The text object provided by the source
-	 * @param  text		$Format		What is the desired output format
 	 * @return HTML
 	 */
 	public function text( $Text ){
@@ -64,6 +63,8 @@ class SourceParser{
 	protected $liturgicalElements = false;	// Look for liturgical elements in the text
 	protected $liturgicalHTML = true;	// Do we wrap liturgical elements in HTML tags
 	protected $suppressAlleluia = false;	// Do we remove the word Alleluia from the text
+	protected $selahHTML = false;	// Do we wrap selah in HTML for fancy rendering
+
 	protected $footnotesEnabled = false;	// Look for footnotes in the source
 	protected $titlesEnabled = false;	// Look for titles in the source
 	protected $intercessionResponse;	// Used for Caching the response to the intercession intentions to make placing it easier.
@@ -102,7 +103,7 @@ class SourceParser{
 	);
 
 
-	protected $inlineMarkerList = '!*_&[:<`~\\';
+	protected $inlineMarkerList = '!*_&[:<`~\\Ss';
 	protected $InlineTypes = array(
 		'!' => array('Image'),
 		'&' => array('SpecialCharacter'),
@@ -124,8 +125,9 @@ class SourceParser{
 			'LiturgicalDagger',	// [t] This is the dagger/obelisk that indicates the current line continues below. Helpful with chanted texts with more than two lines. Rendered as † in non HTML [U+2020 or `&#8224;` or `&dagger;`].
 			'TextRed',	// [red]Text[/red]
 		),
+		'selah' => array('LiturgicalSelah'),
 		'‾' => array('OverUnderLine'),
-		'_' => array('OverUnderLine'),
+		'_' => array('OverUnderLine')
 	);
 	protected $LiturgicalBlockTypes = array(
 		'[' => array(
@@ -205,6 +207,13 @@ class SourceParser{
 		return $this;
 	}
 
+
+	public function setSelahHTML(bool $selahHTML){
+		$this->selahHTML = $selahHTML;
+
+		return $this;
+	}
+
 	public function setTitlesEnabled(bool $titlesEnabled){
 		$this->titlesEnabled = $titlesEnabled;
 
@@ -219,7 +228,6 @@ class SourceParser{
 	/*
 	 * END: Configuration Setters
 	 */
-
 
 
 
@@ -1158,7 +1166,6 @@ class SourceParser{
 
 			if( strpos( '‾', $this->inlineMarkerList ) === false )
 				$this->inlineMarkerList = '‾' . $this->inlineMarkerList;
-
 		}
 
 		$nonNestables = (empty($nonNestables)
@@ -1167,8 +1174,11 @@ class SourceParser{
 		);
 
 		# $excerpt is based on the first occurrence of a marker
-		while ($excerpt = strpbrk($text, $this->inlineMarkerList)){
+		while ( $excerpt = strpbrk( $text, $this->inlineMarkerList)){
 			$marker = mb_substr( $excerpt, 0, 1 );
+
+			if( strtolower( mb_substr( $excerpt, 0, 5 ) ) == 'selah')
+				$marker = 'selah';
 
 			$markerPosition = strlen($text) - strlen($excerpt);
 
@@ -1255,7 +1265,7 @@ class SourceParser{
 
 	protected function inlineText($text){
 		$Inline = array(
-			'extent' => strlen($text),
+			'extent' => strlen( $text ),
 			'element' => array(),
 		);
 
@@ -1989,6 +1999,21 @@ class SourceParser{
 		);
 	}
 
+	protected function inlineLiturgicalSelah( $Excerpt ){
+		if( !$this->selahHTML ){
+			return array(
+				'extent' => 0,
+				'element' => array()
+			);
+		}
+
+
+		$SelahTerm = 'selah';
+		$extent = 0;
+		$Element = array();	// This will simply strip the tags from rendering - as there is no way to know how they want selah rendered
+
+
+
 	protected function inlineTextRed( $Excerpt ){
 		if( $this->liturgicalHTML ){
 			$Element = array(
@@ -1997,8 +2022,6 @@ class SourceParser{
 						'class' => 'color-red',
 					),
 			);
-		}else{
-			$Element = array();	// This will simply strip the tags from rendering - as there is no direct way to render red text
 		}
 
 		$extent = 0;
