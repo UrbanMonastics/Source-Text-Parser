@@ -103,8 +103,8 @@ These texts may need to be used in various formats and contexts. There are going
 	Do we place liturgical markers within HTML tags, or just place them directly into the document.
 *	**setSelahHTML( *bool* )** default: false
 	Do we wrap the term Selah in html for easier styling.
-*	**setSuppressAlleluia( *bool* )** default: false  
-	During the season of Lent the use of the word Alleluia is suppressed. Enabling this option will remove any line where the only text is the word Alleluia.  
+*	**setSuppressAlleluia( *bool*, *string AlleluiaTerm* )** default: false, Alleluia  
+	During the season of Lent the use of the word Alleluia is suppressed. Enabling this option will remove any line where the only text is the word Alleluia. You may also define the alleluia term to look for in the texts for broader language support.  
 *	**setTitlesEnabled( *bool* )** default: false  
 	Do we place any titles from the `text.json` document into the output
 *	**setFootnotesEnabled( *bool* )** default: false  

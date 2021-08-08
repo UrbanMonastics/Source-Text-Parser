@@ -59,6 +59,7 @@ class SourceParserTest extends TestCase
         $this->SourceParser->setPreserveIndentations(substr( $test, 0, 11) === 'indentation');
         $this->SourceParser->setLiturgicalHTML( strpos( $test, '_lesstags_') === false );
         $this->SourceParser->setSelahHTML( stripos( $test, 'selah' ) !== false );
+        $this->SourceParser->setSuppressAlleluia( stripos( $test, 'supress_alleluia' ) !== false );
 		
 
         $actualMarkup = $this->SourceParser->text( $markdown );

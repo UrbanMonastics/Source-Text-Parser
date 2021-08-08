@@ -63,6 +63,7 @@ class SourceParser{
 	protected $liturgicalElements = true;	// Look for liturgical elements in the text
 	protected $liturgicalHTML = true;	// Do we wrap liturgical elements in HTML tags
 	protected $suppressAlleluia = false;	// Do we remove the word Alleluia from the text
+	protected $AlleluiaTerm = 'Alleluia';	// What word do we look for as Alleluia
 	protected $smallCapsText = false;	// Do we convert all caps words into small caps words?
 	protected $selahHTML = false;	// Do we wrap selah in HTML for fancy rendering
 
@@ -106,7 +107,7 @@ class SourceParser{
 	);
 
 
-	protected $inlineMarkerList = '!*_&[:<`~\\Ss';
+	protected $inlineMarkerList = '!*_&[:<`~\\';
 	protected $InlineTypes = array(
 		'!' => array('Image'),
 		'&' => array('SpecialCharacter'),
@@ -129,6 +130,7 @@ class SourceParser{
 			'TextRed',	// [red]Text[/red]
 		),
 		'selah' => array('LiturgicalSelah'),
+		'alleluia' => array('LiturgicalSupressAlleluia'),
 		'‾' => array('OverUnderLine'),
 		'_' => array('OverUnderLine')
 	);
@@ -205,8 +207,11 @@ class SourceParser{
 		return $this;
 	}
 
-	public function setSuppressAlleluia(bool $suppressAlleluia){
+	public function setSuppressAlleluia(bool $suppressAlleluia, string $AlleluiaTerm = NULL ){
 		$this->suppressAlleluia = $suppressAlleluia;
+
+		if( !is_null( $AlleluiaTerm ) )
+			$this->AlleluiaTerm = $AlleluiaTerm;
 
 		return $this;
 	}
@@ -1188,12 +1193,21 @@ class SourceParser{
 			: array_combine($nonNestables, $nonNestables)
 		);
 
+
+		// Ensure that we include the initial letter for terms we need to adapt for
+		if( stripos( $this->inlineMarkerList, substr( $this->AlleluiaTerm, 0, 1) ) === false ){
+			$this->inlineMarkerList .= strtoupper( substr( $this->AlleluiaTerm, 0, 1) ) . strtolower( substr( $this->AlleluiaTerm, 0, 1) );
+		}
+		// Ensure that we include the initial letter for terms we need to adapt for
 		# $excerpt is based on the first occurrence of a marker
 		while ( $excerpt = strpbrk( $text, $this->inlineMarkerList)){
 			$marker = mb_substr( $excerpt, 0, 1 );
 
 			if( strtolower( mb_substr( $excerpt, 0, 5 ) ) == 'selah')
 				$marker = 'selah';
+			}else if( strtolower( $marker ) == strtolower( substr( $this->AlleluiaTerm, 0, 1 ) ) && strtolower( mb_substr( $excerpt, 0, strlen( $this->AlleluiaTerm ) ) ) == strtolower( $this->AlleluiaTerm ) ){
+				$marker = 'alleluia';
+			}
 
 			$markerPosition = strlen($text) - strlen($excerpt);
 
@@ -2053,6 +2067,24 @@ class SourceParser{
 		return array(
 			'extent' => strlen( $SelahTerm ),
 			'element' => $Element,
+		);
+	}
+
+	protected function inlineLiturgicalSupressAlleluia( $Excerpt ){
+		if( !$this->suppressAlleluia ){
+			return;
+		}
+
+		// Check that the SelahTerm is located on it's own line, or else do not do anything
+		$FirstLine = explode( "\n", $Excerpt['text'] )[0];
+		if( strtolower( trim( $FirstLine ) ) !== strtolower( $this->AlleluiaTerm ) ){
+			return;
+		}
+
+
+		return array(
+			'extent' => strlen( $FirstLine . "\n" ),
+			'element' => array(),
 		);
 	}
 
