@@ -10,10 +10,19 @@ The source texts use a subset of the Markdown functionality, and include some ad
   
 ## Features  
 
-*	One File without any Dependencies
-*	Fast
-*	Extended to support Liturgical needs
-*	[GitHub flavored](https://github.github.com/gfm)
+*	Fast  
+*	No external dependancies.  
+*	Built with multibyte text encoding in mind.
+*	Extended to support Liturgical needs - enable what you need  
+	*	Including Versicals  
+	*	Including inline Crosses, Pauses, and Daggers  
+	*	Including Intercessory prayers. With an introduction, response, and two part intentions  
+	*	Including Small Caps of words over 3 characters [enable seperate]  
+	*	Including wrapping the term Selah for custom styling  [enable seperate]  
+	*	Including suppression of the term Alleluia (definable in your language) [enable seperate]  
+*	Including inline red letter text.  
+*	Supports overlined text for more robust manuscript support.  
+*	[GitHub flavored](https://github.github.com/gfm)  
 *	[Tested](http://parsedown.org/tests/) in 7.0 to 8.0
 
 ## Extending Markdown  
@@ -97,12 +106,16 @@ These texts may need to be used in various formats and contexts. There are going
 	When enabled it will convert inline URL strings into clickable links.
 *	**setPreserveIndentations( *bool* )** default: false  
 	When enabled this will convert any tabs (set of 4 spaces) into four double spaces wrapped in a span. Enabling this will disable tabbing for code blocks.
-*	**setLiturgicalElements( *bool* )** default: false  
+*	**setLiturgicalElements( *bool* )** default: true  
 	When enabled the standard Markdown will be supplemented with liturgical elements. See Extending Markdown above for additions
 *	**setLiturgicalHTML( *bool* )** default: true  
 	Do we place liturgical markers within HTML tags, or just place them directly into the document.
-*	**setSuppressAlleluia( *bool* )** default: false  
-	During the season of Lent the use of the word Alleluia is suppressed. Enabling this option will remove any line where the only text is the word Alleluia.  
+*	**setSelahHTML( *bool*, *string SelahTerm* )** default: false, selah  
+	Do we wrap the term Selah in html for easier styling. The Selah term is optional, and allows you to indicated terms used in other languages.  
+*	**setSmallCapsText( *bool* )**
+	Will look for any words of three characters or longer with every character capitolized. These words will then be wrapped in HTML for converting to small caps. This is done in some biblical texts to indicate when the term "יְהֹוָה" (or yhwh) is used to reference God.  
+*	**setSuppressAlleluia( *bool*, *string AlleluiaTerm* )** default: false, Alleluia  
+	During the season of Lent the use of the word Alleluia is suppressed. Enabling this option will remove any line where the only text is the word Alleluia. You may also define the alleluia term to look for in the texts for broader language support.  
 *	**setTitlesEnabled( *bool* )** default: false  
 	Do we place any titles from the `text.json` document into the output
 *	**setFootnotesEnabled( *bool* )** default: false  

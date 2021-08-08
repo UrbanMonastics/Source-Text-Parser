@@ -25,7 +25,6 @@ class SourceParser{
 	 * Format the text and return it
 	 *
 	 * @param  string	$Text		The text object provided by the source
-	 * @param  text		$Format		What is the desired output format
 	 * @return HTML
 	 */
 	public function text( $Text ){
@@ -61,13 +60,20 @@ class SourceParser{
 	protected $safeMode = false;	// How strict are we about raw HTML code
 	protected $strictMode;
 	protected $preserveIndentations = false;	// Do we add spacers to perserve indentations
-	protected $liturgicalElements = false;	// Look for liturgical elements in the text
+	protected $liturgicalElements = true;	// Look for liturgical elements in the text
 	protected $liturgicalHTML = true;	// Do we wrap liturgical elements in HTML tags
 	protected $suppressAlleluia = false;	// Do we remove the word Alleluia from the text
+	protected $AlleluiaTerm = 'Alleluia';	// What word do we look for as Alleluia
+	protected $smallCapsText = false;	// Do we convert all caps words into small caps words?
+	protected $selahHTML = false;	// Do we wrap selah in HTML for fancy rendering
+	protected $SelahTerm = 'Selah';	// What word do we look for as Selah
+
 	protected $footnotesEnabled = false;	// Look for footnotes in the source
 	protected $titlesEnabled = false;	// Look for titles in the source
 	protected $intercessionResponse;	// Used for Caching the response to the intercession intentions to make placing it easier.
-	protected $responseResponse;		// Used for Caching the response to the reading response to make placing it easier.
+	protected $responsoryResponse;		// Used for Caching the response to the reading response to make placing it easier.
+	protected $showVerses = false;	// Do we want to include the verses in the rendered text?
+
 
 	private static $instances = array();
 	protected $DefinitionData;
@@ -124,8 +130,11 @@ class SourceParser{
 			'LiturgicalDagger',	// [t] This is the dagger/obelisk that indicates the current line continues below. Helpful with chanted texts with more than two lines. Rendered as † in non HTML [U+2020 or `&#8224;` or `&dagger;`].
 			'TextRed',	// [red]Text[/red]
 		),
+		'selah' => array('LiturgicalSelah'),
+		'alleluia' => array('LiturgicalSupressAlleluia'),
+		'smallcaps' => array('LiturgicalSmallCaps'),
 		'‾' => array('OverUnderLine'),
-		'_' => array('OverUnderLine'),
+		'_' => array('OverUnderLine')
 	);
 	protected $LiturgicalBlockTypes = array(
 		'[' => array(
@@ -136,6 +145,7 @@ class SourceParser{
 	protected $LiturgicalSymbols = array(
 		'versicle' => '&#8483;',
 		'response' => '&#8479;',
+		'dagger' => '&#8224;'
 	);
 	/*
 	 *	END: Establish the variables
@@ -199,8 +209,26 @@ class SourceParser{
 		return $this;
 	}
 
-	public function setSuppressAlleluia(bool $suppressAlleluia){
+	public function setSuppressAlleluia(bool $suppressAlleluia, string $AlleluiaTerm = NULL ){
 		$this->suppressAlleluia = $suppressAlleluia;
+
+		if( !is_null( $AlleluiaTerm ) )
+			$this->AlleluiaTerm = $AlleluiaTerm;
+
+		return $this;
+	}
+
+	public function setSmallCapsText(bool $smallCapsText){
+		$this->smallCapsText = $smallCapsText;
+
+		return $this;
+	}
+
+	public function setSelahHTML(bool $selahHTML, string $SelahTerm = NULL ){
+		$this->selahHTML = $selahHTML;
+
+		if( !is_null( $SelahTerm ) )
+			$this->SelahTerm = $SelahTerm;
 
 		return $this;
 	}
@@ -216,10 +244,15 @@ class SourceParser{
 
 		return $this;
 	}
+
+	public function setShowVerses(bool $showVerses){
+		$this->showVerses = $showVerses;
+
+		return $this;
+	}
 	/*
 	 * END: Configuration Setters
 	 */
-
 
 
 
@@ -309,6 +342,7 @@ class SourceParser{
 				}
 				while( $tabs > 0 );
 			}
+
 
 			# ~
 
@@ -1158,7 +1192,6 @@ class SourceParser{
 
 			if( strpos( '‾', $this->inlineMarkerList ) === false )
 				$this->inlineMarkerList = '‾' . $this->inlineMarkerList;
-
 		}
 
 		$nonNestables = (empty($nonNestables)
@@ -1166,9 +1199,53 @@ class SourceParser{
 			: array_combine($nonNestables, $nonNestables)
 		);
 
+
+		// Ensure that we include the initial letter for terms we need to adapt for
+		if( stripos( $this->inlineMarkerList, substr( $this->SelahTerm, 0, 1) ) === false ){
+			$this->inlineMarkerList .= strtoupper( substr( $this->SelahTerm, 0, 1) ) . strtolower( substr( $this->SelahTerm, 0, 1) );
+		}
+		if( stripos( $this->inlineMarkerList, substr( $this->AlleluiaTerm, 0, 1) ) === false ){
+			$this->inlineMarkerList .= strtoupper( substr( $this->AlleluiaTerm, 0, 1) ) . strtolower( substr( $this->AlleluiaTerm, 0, 1) );
+		}
+		// Ensure that we include the initial letter for terms we need to adapt for
+
+
+		/*
+		 * Identify and wrap any small caps words (of at least three chars in a row)
+		 */
+		$SmallCapsMatches = array();
+		if( !isset( $this->SmallCapMarkers )){
+			$this->SmallCapMarkers = array();
+		}
+		if( $this->smallCapsText && preg_match('/\b[A-Z]{3,}\b/', $text, $SmallCapsMatches ) ){
+			$SmallCapsMatches = array_unique( $SmallCapsMatches );
+
+			foreach( $SmallCapsMatches as $aMatch ){
+				if( !in_array( substr( $aMatch, 0, 1 ), $this->SmallCapMarkers ) ){
+					$this->SmallCapMarkers[] = strtoupper( substr( $aMatch, 0, 1) );
+				}
+				if( stripos( $this->inlineMarkerList, substr( $aMatch, 0, 1 ) ) === false ){
+					$this->inlineMarkerList .= strtoupper( substr( $aMatch, 0, 1) );
+				}
+			}
+		}
+
+
 		# $excerpt is based on the first occurrence of a marker
-		while ($excerpt = strpbrk($text, $this->inlineMarkerList)){
+		while ( $excerpt = strpbrk( $text, $this->inlineMarkerList)){
 			$marker = mb_substr( $excerpt, 0, 1 );
+
+			// Handle looking for longer text based markers
+			if( strtolower( $marker ) == strtolower( substr( $this->SelahTerm, 0, 1 ) )
+				 && strtolower( mb_substr( $excerpt, 0, strlen( $this->SelahTerm ) ) ) == strtolower( $this->SelahTerm ) ){
+				$marker = 'selah';
+			}else if( strtolower( $marker ) == strtolower( substr( $this->AlleluiaTerm, 0, 1 ) )
+				&& strtolower( mb_substr( $excerpt, 0, strlen( $this->AlleluiaTerm ) ) ) == strtolower( $this->AlleluiaTerm ) ){
+				$marker = 'alleluia';
+			}
+			else if( $this->smallCapsText && in_array( $marker, $this->SmallCapMarkers ) ){
+				$marker = 'smallcaps';
+			}
 
 			$markerPosition = strlen($text) - strlen($excerpt);
 
@@ -1255,7 +1332,7 @@ class SourceParser{
 
 	protected function inlineText($text){
 		$Inline = array(
-			'extent' => strlen($text),
+			'extent' => strlen( $text ),
 			'element' => array(),
 		);
 
@@ -1566,7 +1643,7 @@ class SourceParser{
 		// [V] or [R] 
 		if (preg_match('/^\[[V|R]\]/', $Line['text'], $matches)){
 			$element = $matches[0];
-			$this->responseResponse = array('PreviousLine' => NULL, 'ResponseNode' => NULL);
+			$this->responsoryResponse = array('PreviousLine' => NULL, 'ResponseNode' => NULL);
 
 			if( stripos( $element, 'V') !== false ){
 				$Type = 'versicle';
@@ -1620,9 +1697,9 @@ class SourceParser{
 			);
 
 
-			$this->responseResponse['PreviousLine'] = $Type;
+			$this->responsoryResponse['PreviousLine'] = $Type;
 			if( $Type == 'response' )
-				$this->responseResponse['ResponseNode'] = $TempNode;
+				$this->responsoryResponse['ResponseNode'] = $TempNode;
 
 			return $Block;
 		}
@@ -1640,9 +1717,9 @@ class SourceParser{
 
 
 			// Place the Response before this line if it was not included previously
-			if( !is_null( $this->responseResponse['ResponseNode'] ) && $Type == 'versicle' && $this->responseResponse['PreviousLine'] == 'versicle'){
+			if( !is_null( $this->responsoryResponse['ResponseNode'] ) && $Type == 'versicle' && $this->responsoryResponse['PreviousLine'] == 'versicle'){
 				
-				$CurrentBlock['element']['elements'][] = $this->responseResponse['ResponseNode'];
+				$CurrentBlock['element']['elements'][] = $this->responsoryResponse['ResponseNode'];
 			}
 
 
@@ -1676,9 +1753,9 @@ class SourceParser{
 			);
 
 
-			$this->responseResponse['PreviousLine'] = $Type;
+			$this->responsoryResponse['PreviousLine'] = $Type;
 			if( $Type == 'response' )
-				$this->responseResponse['ResponseNode'] = $TempNode;
+				$this->responsoryResponse['ResponseNode'] = $TempNode;
 
 			return $CurrentBlock;
 		}
@@ -1687,8 +1764,8 @@ class SourceParser{
 
 	protected function blockLiturgicalResponseComplete(array $CurrentBlock){
 		// Remove the trailing <br> from the non-HTML version
-		if( !is_null( $this->responseResponse['ResponseNode'] ) && $this->responseResponse['PreviousLine'] == 'versicle'){
-			$CurrentBlock['element']['elements'][] = $this->responseResponse['ResponseNode'];
+		if( !is_null( $this->responsoryResponse['ResponseNode'] ) && $this->responsoryResponse['PreviousLine'] == 'versicle'){
+			$CurrentBlock['element']['elements'][] = $this->responsoryResponse['ResponseNode'];
 		}
 
 		return $CurrentBlock;
@@ -1699,8 +1776,8 @@ class SourceParser{
 
 
 	protected function blockLiturgicalIntercession( $Line, array $CurrentBlock = null ){
-		// [II], [IR], [I1], or [I2]
-		if (preg_match('/^\[\I[I|R|1|2]\]/', $Line['text'], $matches)){
+		// [II], [IR], [I1], [I2], or [IXtra]
+		if (preg_match('/^\[\I(I|R|1|2|Xtra)\]/', $Line['text'], $matches)){
 			$element = $matches[0];
 			$this->intercessionResponse = null;
 
@@ -1743,6 +1820,9 @@ class SourceParser{
 				break;
 			case '[I2]':
 				$Type = 'part2';
+				break;
+			case '[IXtra]':
+				$Type = 'extra';
 				break;
 			default:
 				return;
@@ -1867,6 +1947,8 @@ class SourceParser{
 					$BlockReference['element']['elements'][] = $a;
 				}
 			}
+		}else if( $Type == 'extra'){
+			var_dump( $this->intercessionResponse );
 		}
 		
 
@@ -1874,7 +1956,7 @@ class SourceParser{
 	}
 
 	protected function blockLiturgicalIntercessionContinue($Line, array $CurrentBlock){
-		if (preg_match('/^\[\I[I|R|1|2]\]/', $Line['text'], $matches)){
+		if (preg_match('/^\[\I(I|R|1|2|Xtra)\]/', $Line['text'], $matches)){
 			$element = $matches[0];
 
 			++$CurrentBlock['data']['lines'];
@@ -1962,7 +2044,7 @@ class SourceParser{
 
 	protected function inlineLiturgicalDagger( $Excerpt ){
 		$Element = array(
-			'rawHtml' => " &#8224;", // Include the space to ensure it always has a space to the left (multiple spaces will collapse)
+			'rawHtml' => ' ' . $this->LiturgicalSymbols['dagger'], // Include the space to ensure it always has a space to the left (multiple spaces will collapse)
 			'allowRawHtmlInSafeMode' => true,
 		);
 		if( $this->liturgicalHTML ){
@@ -1989,7 +2071,79 @@ class SourceParser{
 		);
 	}
 
+	protected function inlineLiturgicalSelah( $Excerpt ){
+		if( !$this->selahHTML ){
+			return;
+		}
+
+		// Check that the SelahTerm is located on it's own line, or else do not do anything
+		$FirstLine = explode( "\n", $Excerpt['text'] )[0];
+		if( strtolower( trim( $FirstLine ) ) !== strtolower( $this->SelahTerm ) ){
+			return;
+		}
+
+		// We have something!
+		$Element = array(
+			'name' => 'span',
+			'attributes' => array(
+					'class' => 'extract-selah',
+				),
+			'text' => trim( $FirstLine )
+		);
+
+		return array(
+			'extent' => strlen( $this->SelahTerm ),
+			'element' => $Element,
+		);
+	}
+
+	protected function inlineLiturgicalSmallCaps( $Excerpt ){
+		if( !$this->smallCapsText ){
+			return;	// Small Caps is disabled matches found
+		}
+
+		// Place the matches into this array
+		$SmallCapsMatches = array();
+		preg_match('/\b[A-Z]{3,}\b/', $Excerpt['text'], $SmallCapsMatches );
+		if( empty( $SmallCapsMatches ) ){
+			return;	// No matches found
+		}
+
+
+		$Element = array(
+			'name' => 'span',
+			'attributes' => array(
+					'class' => 'type-small-caps',
+				),
+			'text' => trim( $SmallCapsMatches[0] )
+		);
+
+		return array(
+			'extent' => strlen( $SmallCapsMatches[0] ),
+			'element' => $Element,
+		);
+	}
+
+	protected function inlineLiturgicalSupressAlleluia( $Excerpt ){
+		if( !$this->suppressAlleluia ){
+			return;
+		}
+
+		// Check that the SelahTerm is located on it's own line, or else do not do anything
+		$FirstLine = explode( "\n", $Excerpt['text'] )[0];
+		if( strtolower( trim( $FirstLine ) ) !== strtolower( $this->AlleluiaTerm ) ){
+			return;
+		}
+
+
+		return array(
+			'extent' => strlen( $FirstLine . "\n" ),
+			'element' => array(),
+		);
+	}
+
 	protected function inlineTextRed( $Excerpt ){
+		$Element = array();	// This will simply strip the tags from rendering - as there is no direct way to render red text
 		if( $this->liturgicalHTML ){
 			$Element = array(
 				'name' => 'span',
@@ -1997,8 +2151,6 @@ class SourceParser{
 						'class' => 'color-red',
 					),
 			);
-		}else{
-			$Element = array();	// This will simply strip the tags from rendering - as there is no direct way to render red text
 		}
 
 		$extent = 0;
