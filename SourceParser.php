@@ -66,6 +66,7 @@ class SourceParser{
 	protected $AlleluiaTerm = 'Alleluia';	// What word do we look for as Alleluia
 	protected $smallCapsText = false;	// Do we convert all caps words into small caps words?
 	protected $selahHTML = false;	// Do we wrap selah in HTML for fancy rendering
+	protected $SelahTerm = 'Selah';	// What word do we look for as Selah
 
 	protected $footnotesEnabled = false;	// Look for footnotes in the source
 	protected $titlesEnabled = false;	// Look for titles in the source
@@ -222,8 +223,11 @@ class SourceParser{
 		return $this;
 	}
 
-	public function setSelahHTML(bool $selahHTML){
+	public function setSelahHTML(bool $selahHTML, string $SelahTerm = NULL ){
 		$this->selahHTML = $selahHTML;
+
+		if( !is_null( $SelahTerm ) )
+			$this->SelahTerm = $SelahTerm;
 
 		return $this;
 	}
@@ -1195,15 +1199,22 @@ class SourceParser{
 
 
 		// Ensure that we include the initial letter for terms we need to adapt for
+		if( stripos( $this->inlineMarkerList, substr( $this->SelahTerm, 0, 1) ) === false ){
+			$this->inlineMarkerList .= strtoupper( substr( $this->SelahTerm, 0, 1) ) . strtolower( substr( $this->SelahTerm, 0, 1) );
+		}
 		if( stripos( $this->inlineMarkerList, substr( $this->AlleluiaTerm, 0, 1) ) === false ){
 			$this->inlineMarkerList .= strtoupper( substr( $this->AlleluiaTerm, 0, 1) ) . strtolower( substr( $this->AlleluiaTerm, 0, 1) );
 		}
 		// Ensure that we include the initial letter for terms we need to adapt for
+
+
+
 		# $excerpt is based on the first occurrence of a marker
 		while ( $excerpt = strpbrk( $text, $this->inlineMarkerList)){
 			$marker = mb_substr( $excerpt, 0, 1 );
 
-			if( strtolower( mb_substr( $excerpt, 0, 5 ) ) == 'selah')
+			// Handle looking for longer text based markers
+			if( strtolower( $marker ) == strtolower( substr( $this->SelahTerm, 0, 1 ) ) && strtolower( mb_substr( $excerpt, 0, strlen( $this->SelahTerm ) ) ) == strtolower( $this->SelahTerm ) ){
 				$marker = 'selah';
 			}else if( strtolower( $marker ) == strtolower( substr( $this->AlleluiaTerm, 0, 1 ) ) && strtolower( mb_substr( $excerpt, 0, strlen( $this->AlleluiaTerm ) ) ) == strtolower( $this->AlleluiaTerm ) ){
 				$marker = 'alleluia';
@@ -2035,37 +2046,26 @@ class SourceParser{
 
 	protected function inlineLiturgicalSelah( $Excerpt ){
 		if( !$this->selahHTML ){
-			return array(
-				'extent' => 0,
-				'element' => array()
-			);
+			return;
 		}
-
-
-		$SelahTerm = 'selah';
-		$extent = 0;
-		$Element = array();	// This will simply strip the tags from rendering - as there is no way to know how they want selah rendered
-
 
 		// Check that the SelahTerm is located on it's own line, or else do not do anything
-		$After = substr( $Excerpt['text'], strlen( $SelahTerm ) );
-		if( trim( strtolower( explode( "\n", $Excerpt['text'] )[0] ) ) !== $SelahTerm ){
-			return array(
-				'extent' => $extent,
-				'element' => array(),
-			);
+		$FirstLine = explode( "\n", $Excerpt['text'] )[0];
+		if( strtolower( trim( $FirstLine ) ) !== strtolower( $this->SelahTerm ) ){
+			return;
 		}
 
+		// We have something!
 		$Element = array(
 			'name' => 'span',
 			'attributes' => array(
 					'class' => 'extract-selah',
 				),
-			'text' => trim( explode( "\n", $Excerpt['text'] )[0]  )
+			'text' => trim( $FirstLine )
 		);
 
 		return array(
-			'extent' => strlen( $SelahTerm ),
+			'extent' => strlen( $this->SelahTerm ),
 			'element' => $Element,
 		);
 	}
