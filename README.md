@@ -10,10 +10,19 @@ The source texts use a subset of the Markdown functionality, and include some ad
   
 ## Features  
 
-*	One File without any Dependencies
-*	Fast
-*	Extended to support Liturgical needs
-*	[GitHub flavored](https://github.github.com/gfm)
+*	Fast  
+*	No external dependancies.  
+*	Built with multibyte text encoding in mind.
+*	Extended to support Liturgical needs - enable what you need  
+	*	Including Versicals  
+	*	Including inline Crosses, Pauses, and Daggers  
+	*	Including Intercessory prayers. With an introduction, response, and two part intentions  
+	*	Including Small Caps of words over 3 characters [enable seperate]  
+	*	Including wrapping the term Selah for custom styling  [enable seperate]  
+	*	Including suppression of the term Alleluia (definable in your language) [enable seperate]  
+*	Including inline red letter text.  
+*	Supports overlined text for more robust manuscript support.  
+*	[GitHub flavored](https://github.github.com/gfm)  
 *	[Tested](http://parsedown.org/tests/) in 7.0 to 8.0
 
 ## Extending Markdown  
