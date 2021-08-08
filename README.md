@@ -101,6 +101,8 @@ These texts may need to be used in various formats and contexts. There are going
 	When enabled the standard Markdown will be supplemented with liturgical elements. See Extending Markdown above for additions
 *	**setLiturgicalHTML( *bool* )** default: true  
 	Do we place liturgical markers within HTML tags, or just place them directly into the document.
+*	**setSelahHTML( *bool* )** default: false
+	Do we wrap the term Selah in html for easier styling.
 *	**setSuppressAlleluia( *bool* )** default: false  
 	During the season of Lent the use of the word Alleluia is suppressed. Enabling this option will remove any line where the only text is the word Alleluia.  
 *	**setTitlesEnabled( *bool* )** default: false  
