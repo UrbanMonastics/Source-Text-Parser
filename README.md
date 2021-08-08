@@ -103,6 +103,8 @@ These texts may need to be used in various formats and contexts. There are going
 	Do we place liturgical markers within HTML tags, or just place them directly into the document.
 *	**setSelahHTML( *bool*, *string SelahTerm* )** default: false, selah  
 	Do we wrap the term Selah in html for easier styling. The Selah term is optional, and allows you to indicated terms used in other languages.  
+*	**setSmallCapsText( *bool* )**
+	Will look for any words of three characters or longer with every character capitolized. These words will then be wrapped in HTML for converting to small caps. This is done in some biblical texts to indicate when the term "יְהֹוָה" (or yhwh) is used to reference God.  
 *	**setSuppressAlleluia( *bool*, *string AlleluiaTerm* )** default: false, Alleluia  
 	During the season of Lent the use of the word Alleluia is suppressed. Enabling this option will remove any line where the only text is the word Alleluia. You may also define the alleluia term to look for in the texts for broader language support.  
 *	**setTitlesEnabled( *bool* )** default: false  

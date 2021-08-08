@@ -132,6 +132,7 @@ class SourceParser{
 		),
 		'selah' => array('LiturgicalSelah'),
 		'alleluia' => array('LiturgicalSupressAlleluia'),
+		'smallcaps' => array('LiturgicalSmallCaps'),
 		'‾' => array('OverUnderLine'),
 		'_' => array('OverUnderLine')
 	);
@@ -341,6 +342,7 @@ class SourceParser{
 				}
 				while( $tabs > 0 );
 			}
+
 
 			# ~
 
@@ -1208,16 +1210,41 @@ class SourceParser{
 		// Ensure that we include the initial letter for terms we need to adapt for
 
 
+		/*
+		 * Identify and wrap any small caps words (of at least three chars in a row)
+		 */
+		$SmallCapsMatches = array();
+		if( !isset( $this->SmallCapMarkers )){
+			$this->SmallCapMarkers = array();
+		}
+		if( $this->smallCapsText && preg_match('/\b[A-Z]{3,}\b/', $text, $SmallCapsMatches ) ){
+			$SmallCapsMatches = array_unique( $SmallCapsMatches );
+
+			foreach( $SmallCapsMatches as $aMatch ){
+				if( !in_array( substr( $aMatch, 0, 1 ), $this->SmallCapMarkers ) ){
+					$this->SmallCapMarkers[] = strtoupper( substr( $aMatch, 0, 1) );
+				}
+				if( stripos( $this->inlineMarkerList, substr( $aMatch, 0, 1 ) ) === false ){
+					$this->inlineMarkerList .= strtoupper( substr( $aMatch, 0, 1) );
+				}
+			}
+		}
+
 
 		# $excerpt is based on the first occurrence of a marker
 		while ( $excerpt = strpbrk( $text, $this->inlineMarkerList)){
 			$marker = mb_substr( $excerpt, 0, 1 );
 
 			// Handle looking for longer text based markers
-			if( strtolower( $marker ) == strtolower( substr( $this->SelahTerm, 0, 1 ) ) && strtolower( mb_substr( $excerpt, 0, strlen( $this->SelahTerm ) ) ) == strtolower( $this->SelahTerm ) ){
+			if( strtolower( $marker ) == strtolower( substr( $this->SelahTerm, 0, 1 ) )
+				 && strtolower( mb_substr( $excerpt, 0, strlen( $this->SelahTerm ) ) ) == strtolower( $this->SelahTerm ) ){
 				$marker = 'selah';
-			}else if( strtolower( $marker ) == strtolower( substr( $this->AlleluiaTerm, 0, 1 ) ) && strtolower( mb_substr( $excerpt, 0, strlen( $this->AlleluiaTerm ) ) ) == strtolower( $this->AlleluiaTerm ) ){
+			}else if( strtolower( $marker ) == strtolower( substr( $this->AlleluiaTerm, 0, 1 ) )
+				&& strtolower( mb_substr( $excerpt, 0, strlen( $this->AlleluiaTerm ) ) ) == strtolower( $this->AlleluiaTerm ) ){
 				$marker = 'alleluia';
+			}
+			else if( $this->smallCapsText && in_array( $marker, $this->SmallCapMarkers ) ){
+				$marker = 'smallcaps';
 			}
 
 			$markerPosition = strlen($text) - strlen($excerpt);
@@ -2066,6 +2093,33 @@ class SourceParser{
 
 		return array(
 			'extent' => strlen( $this->SelahTerm ),
+			'element' => $Element,
+		);
+	}
+
+	protected function inlineLiturgicalSmallCaps( $Excerpt ){
+		if( !$this->smallCapsText ){
+			return;	// Small Caps is disabled matches found
+		}
+
+		// Place the matches into this array
+		$SmallCapsMatches = array();
+		preg_match('/\b[A-Z]{3,}\b/', $Excerpt['text'], $SmallCapsMatches );
+		if( empty( $SmallCapsMatches ) ){
+			return;	// No matches found
+		}
+
+
+		$Element = array(
+			'name' => 'span',
+			'attributes' => array(
+					'class' => 'type-small-caps',
+				),
+			'text' => trim( $SmallCapsMatches[0] )
+		);
+
+		return array(
+			'extent' => strlen( $SmallCapsMatches[0] ),
 			'element' => $Element,
 		);
 	}
