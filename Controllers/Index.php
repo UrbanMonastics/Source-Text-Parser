@@ -2,7 +2,7 @@
 
 /***********
  *	
- *	SourceParser
+ *	Source Text Parser
  *	https://developers.urbanmonastic.org/
  *	
  *	© Paul Prins
@@ -12,9 +12,9 @@
  *	
  ***********/
 
-namespace UrbanMonastics\SourceParser\Controllers;
+namespace UrbanMonastics\SourceTextParser\Controllers;
 
-use UrbanMonastics\SourceParser\SourceText as SourceText;
+use UrbanMonastics\SourceTextParser\SourceText as SourceText;
 
 class Index{
 	// Manage the location, and loading of the various files from the location

@@ -2,7 +2,7 @@
 
 /***********
  *	
- *	SourceParser
+ *	Source Text Parser
  *	https://developers.urbanmonastic.org/
  *	
  *	© Paul Prins
@@ -12,7 +12,7 @@
  *	
  ***********/
 
-namespace UrbanMonastics\SourceParser\Models;
+namespace UrbanMonastics\SourceTextParser\Models;
 
 class Text{
 	/* -- Source Members -- */
@@ -36,56 +36,56 @@ class Text{
 
 
 	public function __construct( Array $RawText = array() ){
-		if( array_key_exists( 'Abbreviation', $RawSource ) ){
-			$this->setAbbreviation( $RawSource['Abbreviation'] );
+		if( array_key_exists( 'Abbreviation', $RawText ) ){
+			$this->setAbbreviation( $RawText['Abbreviation'] );
 		}
 
-		if( array_key_exists( 'Title', $RawSource ) ){
-			$this->setTitle( $RawSource['Title'] );
+		if( array_key_exists( 'Title', $RawText ) ){
+			$this->setTitle( $RawText['Title'] );
 		}
 
-		if( array_key_exists( 'Description', $RawSource ) ){
-			$this->setDescription( $RawSource['Description'] );
+		if( array_key_exists( 'Description', $RawText ) ){
+			$this->setDescription( $RawText['Description'] );
 		}
 
-		if( array_key_exists( 'Type', $RawSource ) ){
-			$this->setType( $RawSource['Type'] );
+		if( array_key_exists( 'Type', $RawText ) ){
+			$this->setType( $RawText['Type'] );
 		}
 
-		if( array_key_exists( 'SecondaryType', $RawSource ) ){
-			$this->setSecondaryType( $RawSource['SecondaryType'] );
+		if( array_key_exists( 'SecondaryType', $RawText ) ){
+			$this->setSecondaryType( $RawText['SecondaryType'] );
 		}
 
-		if( array_key_exists( 'Language', $RawSource ) ){
-			$this->setLanguage( $RawSource['Language'] );
+		if( array_key_exists( 'Language', $RawText ) ){
+			$this->setLanguage( $RawText['Language'] );
 		}
 
-		if( array_key_exists( 'SecondaryLanguage', $RawSource ) ){
-			$this->setSecondaryLanguage( $RawSource['SecondaryLanguage'] );
+		if( array_key_exists( 'SecondaryLanguage', $RawText ) ){
+			$this->setSecondaryLanguage( $RawText['SecondaryLanguage'] );
 		}
 
-		if( array_key_exists( 'Version', $RawSource ) ){
-			$this->setVersion( $RawSource['Version'] );
+		if( array_key_exists( 'Version', $RawText ) ){
+			$this->setVersion( $RawText['Version'] );
 		}
 
-		if( array_key_exists( 'Segments', $RawSource ) ){
-			$this->setSegments( $RawSource['Segments'] );
+		if( array_key_exists( 'Segments', $RawText ) ){
+			$this->setSegments( $RawText['Segments'] );
 		}
 
-		if( array_key_exists( 'SegmentTitles', $RawSource ) ){
-			$this->setSegmentTitles( $RawSource['SegmentTitles'] );
+		if( array_key_exists( 'SegmentTitles', $RawText ) ){
+			$this->setSegmentTitles( $RawText['SegmentTitles'] );
 		}
 
-		if( array_key_exists( 'Verses', $RawSource ) ){
-			$this->setVerses( $RawSource['Verses'] );
+		if( array_key_exists( 'Verses', $RawText ) ){
+			$this->setVerses( $RawText['Verses'] );
 		}
 
-		if( array_key_exists( 'Notes', $RawSource ) ){
-			$this->setNotes( $RawSource['Notes'] );
+		if( array_key_exists( 'Notes', $RawText ) ){
+			$this->setNotes( $RawText['Notes'] );
 		}
 
-		if( array_key_exists( 'Extra', $RawSource ) ){
-			$this->setExtra( $RawSource['Extra'] );
+		if( array_key_exists( 'Extra', $RawText ) ){
+			$this->setExtra( $RawText['Extra'] );
 		}
 
 		return $this;
