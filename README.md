@@ -1,4 +1,4 @@
-# Source Parser in PHP
+# Source Texts Parser in PHP
 [![Build Status](https://travis-ci.com/UrbanMonastics/SourceParser.svg)](https://travis-ci.com/UrbanMonastics/SourceParser)
 [![Total Downloads](https://poser.pugx.org/urbanmonastics/sourceparser/d/total.svg)](https://packagist.org/packages/urbanmonastics/sourceparser)
 [![Version](https://poser.pugx.org/urbanmonastics/sourceparser/v/stable.svg)](https://packagist.org/packages/urbanmonastics/sourceparser)
