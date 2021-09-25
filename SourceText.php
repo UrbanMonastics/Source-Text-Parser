@@ -2,7 +2,7 @@
 
 /***********
  *	
- *	SourceParser
+ *	Source Text Parser
  *	https://developers.urbanmonastic.org/
  *	
  *	© Paul Prins
@@ -12,20 +12,20 @@
  *	
  ***********/
 
-namespace UrbanMonastics\SourceParser;
+namespace UrbanMonastics\SourceTextParser;
 
-use UrbanMonastics\SourceParser\SourceParser as SourceParser;
-use UrbanMonastics\SourceParser\Controllers\Index as IndexController;
-use UrbanMonastics\SourceParser\Controllers\Languages as LanguageController;
-use UrbanMonastics\SourceParser\Controllers\Texts as TextController;
-use UrbanMonastics\SourceParser\Controllers\Versions as VersionController;
-use UrbanMonastics\SourceParser\Models\Reference as Reference;
-use UrbanMonastics\SourceParser\Models\Source as Source;
-use UrbanMonastics\SourceParser\Models\Version as Version;
-use UrbanMonastics\SourceParser\Parsing\Reference as ReferenceParsing;
+use UrbanMonastics\SourceTextParser\SourceTextParser as SourceTextParser;
+use UrbanMonastics\SourceTextParser\Controllers\Index as IndexController;
+use UrbanMonastics\SourceTextParser\Controllers\Languages as LanguageController;
+use UrbanMonastics\SourceTextParser\Controllers\Texts as TextController;
+use UrbanMonastics\SourceTextParser\Controllers\Versions as VersionController;
+use UrbanMonastics\SourceTextParser\Models\Reference as Reference;
+use UrbanMonastics\SourceTextParser\Models\Source as Source;
+use UrbanMonastics\SourceTextParser\Models\Version as Version;
+use UrbanMonastics\SourceTextParser\Parsing\Reference as ReferenceParsing;
 
 
-class SourceText extends SourceParser{
+class SourceText extends SourceTextParser{
 	/* -- Variables for Source Texts -- */
 	protected $Source;		// This is the source.json file as an Object
 	protected $Reference;		// What portion (Chapter, Chapter/Verse, Abbv) are we parsing
@@ -224,7 +224,7 @@ class SourceText extends SourceParser{
 		$this->textReference = null;	// Clearn any cached reference
 
 		// Before we can set a reference we must have the TextsPath, and the Source information defined so we know how to look for files in that directory
-		if( !is_a( $this->Source, 'UrbanMonastics\SourceParser\Models\Source' ) ){
+		if( !is_a( $this->Source, 'UrbanMonastics\SourceTextParser\Models\Source' ) ){
 			return false;	// We can only set references if we know how the source is structured
 		}
 		$Reference = trim( $Reference );

@@ -2,7 +2,7 @@
 
 /***********
  *	
- *	SourceParser
+ *	Source Text Parser
  *	https://developers.urbanmonastic.org/
  *	
  *	© Paul Prins
@@ -12,10 +12,10 @@
  *	
  ***********/
 
-namespace UrbanMonastics\SourceParser\Parsing;
+namespace UrbanMonastics\SourceTextParser\Parsing;
 
-use UrbanMonastics\SourceParser\Models\Source as Source;
-use UrbanMonastics\SourceParser\Models\Reference as theReference;
+use UrbanMonastics\SourceTextParser\Models\Source as Source;
+use UrbanMonastics\SourceTextParser\Models\Reference as theReference;
 
 class Reference{
 	/* -- Reference Variables -- */

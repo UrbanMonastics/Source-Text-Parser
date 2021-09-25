@@ -2,7 +2,7 @@
 
 /***********
  *	
- *	SourceParser
+ *	Source Text Parser
  *	https://developers.urbanmonastic.org/
  *	
  *	© Paul Prins
@@ -12,9 +12,9 @@
  *	
  ***********/
 
-namespace UrbanMonastics\SourceParser;
+namespace UrbanMonastics\SourceTextParser;
 
-class SourceParser{
+class SourceTextParser{
 
 
 	// Establish the version of the library

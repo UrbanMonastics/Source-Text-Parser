@@ -2,7 +2,7 @@
 
 /***********
  *	
- *	SourceParser
+ *	Source Text Parser
  *	https://developers.urbanmonastic.org/
  *	
  *	© Paul Prins
@@ -12,10 +12,10 @@
  *	
  ***********/
 
-namespace UrbanMonastics\SourceParser\Controllers;
+namespace UrbanMonastics\SourceTextParser\Controllers;
 
-use UrbanMonastics\SourceParser\Models\Language as Language;
-use UrbanMonastics\SourceParser\SourceText as SourceText;
+use UrbanMonastics\SourceTextParser\Models\Language as Language;
+use UrbanMonastics\SourceTextParser\SourceText as SourceText;
 
 class Languages{
 	// Manage the location, and loading of the various files from the location

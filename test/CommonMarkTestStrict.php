@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Test SourceParser against the CommonMark spec
+ * Test SourceTextParser against the CommonMark spec
  *
  * @link http://commonmark.org/ CommonMark
  */
@@ -9,12 +9,12 @@ class CommonMarkTestStrict extends PHPUnit_Framework_TestCase
 {
     const SPEC_URL = 'https://raw.githubusercontent.com/jgm/CommonMark/master/spec.txt';
 
-    protected $SourceParser;
+    protected $SourceTextParser;
 
     protected function setUp()
     {
-        $this->SourceParser = new TestSourceParser();
-        $this->SourceParser->setUrlsLinked(false);
+        $this->SourceTextParser = new TestSourceTextParser();
+        $this->SourceTextParser->setUrlsLinked(false);
     }
 
     /**
@@ -26,7 +26,7 @@ class CommonMarkTestStrict extends PHPUnit_Framework_TestCase
      */
     public function testExample($id, $section, $markdown, $expectedHtml)
     {
-        $actualHtml = $this->SourceParser->text($markdown);
+        $actualHtml = $this->SourceTextParser->text($markdown);
         $this->assertEquals($expectedHtml, $actualHtml);
     }
 

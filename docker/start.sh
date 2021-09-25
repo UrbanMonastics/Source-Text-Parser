@@ -13,5 +13,5 @@ docker-compose up -d
 
 echo
 echo "You can connect from your development (host) machine to these services:"
-echo "SourceParser:    http://localhost:8080/"
+echo "SourceTextParser:    http://localhost:8080/"
 echo

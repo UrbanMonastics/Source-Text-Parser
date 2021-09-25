@@ -1,4 +1,4 @@
-# Source Parser in PHP
+# Source Texts Parser in PHP
 [![Build Status](https://travis-ci.com/UrbanMonastics/SourceParser.svg)](https://travis-ci.com/UrbanMonastics/SourceParser)
 [![Total Downloads](https://poser.pugx.org/urbanmonastics/sourceparser/d/total.svg)](https://packagist.org/packages/urbanmonastics/sourceparser)
 [![Version](https://poser.pugx.org/urbanmonastics/sourceparser/v/stable.svg)](https://packagist.org/packages/urbanmonastics/sourceparser)
@@ -47,6 +47,7 @@ These can be placed anywhere within the texts. Since there are not standard ways
 *	[IR]	During the *Intercessions* this indicated the **Response**. It should only be placed in the source text on the line after the introduction. It will be placed in other locations when formatted. When prayed in a group it should be read only by the leader.  
 *	[I1]	During the *Intercessions* this indicates the **first** part of an **intention**. 
 *	[I2]	During the *Intercessions* this indicates the **second** part of an **intention**. 
+*	[IXtra]	During the *Intercessions* this indicates place where additional intentions would be placed. Normally before the last full intention.
 
 
 ## Other Options 
@@ -57,35 +58,35 @@ These can be placed anywhere within the texts. Since there are not standard ways
 Install the composer package:  
 
 ```php
-composer require UrbanMonastics/SourceParser
+composer require UrbanMonastics/SourceTextParser
 ```
   
-Or download the latest release and include `SourceParser.php`  
+Or download the latest release and include `SourceTextParser.php`  
   
 ## Example Usage  
 In the most simple approach you can pass text to be parsed.  
 
 ```php
-$SourceParser = new /UrbanMonastics/SourceParser();
+$SourceTextParser = new /UrbanMonastics/SourceTextParser();
 
-echo $SourceParser->text("Hello *Source Parser*!");  # prints: <p>Hello <em>Source Parser</em>!</p>
+echo $SourceTextParser->text("Hello *Source Parser*!");  # prints: <p>Hello <em>Source Parser</em>!</p>
 ```
 
 You can also take advantage of the structure of the source texts.
 
 ```php
-$SourceParser = new SourceParser();
+$SourceTextParser = new SourceTextParser();
 
 // Load the source data into the parser
 $Source = json_decode( file_get_contents('path/to/source.json'), true );
-$SourceParser->loadSource( $Source );
+$SourceTextParser->loadSource( $Source );
 
-$SourceParser->loadText();
+$SourceTextParser->loadText();
 
-echo $SourceParser->text("Hello *Source Parser*!");  # prints: <p>Hello <em>Source Parser</em>!</p>
+echo $SourceTextParser->text("Hello *Source Parser*!");  # prints: <p>Hello <em>Source Parser</em>!</p>
 
 // Clear the loaded Source and Texts - without altering other options
-$SourceParser->clearSource();
+$SourceTextParser->clearSource();
 ```
 
 
@@ -123,17 +124,17 @@ These texts may need to be used in various formats and contexts. There are going
 
 
 ```php
-$SourceParser->setLiturgicalElements( true );
-echo $SourceParser->text("God, [+] come to my assistance,[*]");
+$SourceTextParser->setLiturgicalElements( true );
+echo $SourceTextParser->text("God, [+] come to my assistance,[*]");
 // prints: <p>God, <span class="symbol-cross">✛</span> come to my assistance,<span class="symbol-star">*</span></p>
 
-$SourceParser->setLiturgicalHTML( false );	# The default value is True, so you can manually disable wrapping liturgical elements.
-echo $SourceParser->text("God, [+] come to my assistance,[*]");
+$SourceTextParser->setLiturgicalHTML( false );	# The default value is True, so you can manually disable wrapping liturgical elements.
+echo $SourceTextParser->text("God, [+] come to my assistance,[*]");
 // prints: <p>God, ✛ come to my assistance,*</p>
 ```
 
 ## Development Environment
-To make it easier to develop and build out the SourceParser we have setup a local docker container for you to use. There are some simple unix scripts from the project base directory that you can execute to get setup.
+To make it easier to develop and build out the SourceTextParser we have setup a local docker container for you to use. There are some simple unix scripts from the project base directory that you can execute to get setup.
 
 
 	# To build or update the container
@@ -145,7 +146,7 @@ To make it easier to develop and build out the SourceParser we have setup a loca
 	# To stop/shutdown the container
 	./docker/stop.sh
 	
-	# To run the PHPUnit tests in /test/SourceParserTest.php
+	# To run the PHPUnit tests in /test/SourceTextParserTest.php
 	./docker/phpunit.sh
 	
 	# To attach to the running container

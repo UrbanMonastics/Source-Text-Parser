@@ -2,7 +2,7 @@
 
 /***********
  *	
- *	SourceParser
+ *	Source Text Parser
  *	https://developers.urbanmonastic.org/
  *	
  *	© Paul Prins
@@ -12,10 +12,10 @@
  *	
  ***********/
 
-namespace UrbanMonastics\SourceParser\Models;
+namespace UrbanMonastics\SourceTextParser\Models;
 
-use UrbanMonastics\SourceParser\Models\Language as Language;
-use UrbanMonastics\SourceParser\SourceText as SourceText;
+use UrbanMonastics\SourceTextParser\Models\Language as Language;
+use UrbanMonastics\SourceTextParser\SourceText as SourceText;
 
 class Version{
 	/* -- Version Members -- */

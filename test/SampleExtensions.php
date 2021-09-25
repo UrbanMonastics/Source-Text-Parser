@@ -1,8 +1,8 @@
 <?php
 
-use UrbanMonastics\SourceParser\SourceParser as SourceParser;
+use UrbanMonastics\SourceTextParser\SourceTextParser as SourceTextParser;
 
-class UnsafeExtension extends SourceParser
+class UnsafeExtension extends SourceTextParser
 {
     protected function blockFencedCodeComplete($Block)
     {
@@ -21,7 +21,7 @@ class UnsafeExtension extends SourceParser
 }
 
 
-class TrustDelegatedExtension extends SourceParser
+class TrustDelegatedExtension extends SourceTextParser
 {
     protected function blockFencedCodeComplete($Block)
     {

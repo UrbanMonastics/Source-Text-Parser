@@ -3,20 +3,20 @@
 require 'SampleExtensions.php';
 
 use PHPUnit\Framework\TestCase;
-use UrbanMonastics\SourceParser\SourceParser as SourceParser;
+use UrbanMonastics\SourceTextParser\SourceTextParser as SourceTextParser;
 
-class SourceParserTest extends TestCase
+class SourceTextParserTest extends TestCase
 {
     final function __construct($name = null, array $data = array(), $dataName = '')
     {
         $this->dirs = $this->initDirs();
-        $this->SourceParser = $this->initSourceParser();
+        $this->SourceTextParser = $this->initSourceTextParser();
 
         parent::__construct($name, $data, $dataName);
     }
 
     private $dirs;
-    protected $SourceParser;
+    protected $SourceTextParser;
 
     /**
      * @return array
@@ -29,12 +29,12 @@ class SourceParserTest extends TestCase
     }
 
     /**
-     * @return SourceParser
+     * @return SourceTextParser
      */
-    protected function initSourceParser()
+    protected function initSourceTextParser()
     {
-        $SourceParser = new TestSourceParser();
-        return $SourceParser;
+        $SourceTextParser = new TestSourceTextParser();
+        return $SourceTextParser;
     }
 
     /**
@@ -51,24 +51,24 @@ class SourceParserTest extends TestCase
         $expectedMarkup = str_replace("\r\n", "\n", $expectedMarkup);
         $expectedMarkup = str_replace("\r", "\n", $expectedMarkup);
 
-        $this->SourceParser->setSafeMode(substr($test, 0, 3) === 'xss');
-        $this->SourceParser->setStrictMode(substr($test, 0, 6) === 'strict');
+        $this->SourceTextParser->setSafeMode(substr($test, 0, 3) === 'xss');
+        $this->SourceTextParser->setStrictMode(substr($test, 0, 6) === 'strict');
 
 		// Add support for Liturgical Elements
-        $this->SourceParser->setLiturgicalElements(substr( $test, 0, 7) === 'liturgy');
-        $this->SourceParser->setPreserveIndentations(substr( $test, 0, 11) === 'indentation');
-        $this->SourceParser->setLiturgicalHTML( strpos( $test, '_lesstags_') === false );
-        $this->SourceParser->setSelahHTML( stripos( $test, 'selah' ) !== false, 'Selah' );
+        $this->SourceTextParser->setLiturgicalElements(substr( $test, 0, 7) === 'liturgy');
+        $this->SourceTextParser->setPreserveIndentations(substr( $test, 0, 11) === 'indentation');
+        $this->SourceTextParser->setLiturgicalHTML( strpos( $test, '_lesstags_') === false );
+        $this->SourceTextParser->setSelahHTML( stripos( $test, 'selah' ) !== false, 'Selah' );
 		if( stripos( $test, 'selah_termed' ) !== false ){
-	        $this->SourceParser->setSelahHTML( true, 'OtherSelah'  );
+	        $this->SourceTextParser->setSelahHTML( true, 'OtherSelah'  );
 		}
-        $this->SourceParser->setSmallCapsText( stripos( $test, 'small_caps' ) !== false );
-        $this->SourceParser->setSuppressAlleluia( stripos( $test, 'supress_alleluia' ) !== false, 'Alleluia' );
+        $this->SourceTextParser->setSmallCapsText( stripos( $test, 'small_caps' ) !== false );
+        $this->SourceTextParser->setSuppressAlleluia( stripos( $test, 'supress_alleluia' ) !== false, 'Alleluia' );
 		if( stripos( $test, 'supress_alleluia_termed' ) !== false ){
-	        $this->SourceParser->setSuppressAlleluia( stripos( $test, 'supress_alleluia' ) !== false, 'OtherAlleluia' );
+	        $this->SourceTextParser->setSuppressAlleluia( stripos( $test, 'supress_alleluia' ) !== false, 'OtherAlleluia' );
 		}
 
-        $actualMarkup = $this->SourceParser->text( $markdown );
+        $actualMarkup = $this->SourceTextParser->text( $markdown );
 
         $this->assertEquals($expectedMarkup, $actualMarkup, "This Test: " . $test );
     }
@@ -189,27 +189,27 @@ color: red;
 <p>&lt;!-- html comment --&gt;</p>
 EXPECTED_HTML;
 
-        $SourceParserWithNoMarkup = new TestSourceParser();
-        $SourceParserWithNoMarkup->setMarkupEscaped(true);
-        $SourceParserWithNoMarkup->setBreaksEnabled(false);
-        $this->assertEquals($expectedHtml, $SourceParserWithNoMarkup->text($markdownWithHtml));
+        $SourceTextParserWithNoMarkup = new TestSourceTextParser();
+        $SourceTextParserWithNoMarkup->setMarkupEscaped(true);
+        $SourceTextParserWithNoMarkup->setBreaksEnabled(false);
+        $this->assertEquals($expectedHtml, $SourceTextParserWithNoMarkup->text($markdownWithHtml));
     }
 
     public function testLateStaticBinding()
     {
-        $SourceParser = SourceParser::instance();
-        $this->assertInstanceOf('UrbanMonastics\SourceParser\SourceParser', $SourceParser);
+        $SourceTextParser = SourceTextParser::instance();
+        $this->assertInstanceOf('UrbanMonastics\SourceTextParser\SourceTextParser', $SourceTextParser);
 
-        // After instance is already called on SourceParser
+        // After instance is already called on SourceTextParser
         // subsequent calls with the same arguments return the same instance
-        $sameSourceParser = TestSourceParser::instance();
-        $this->assertInstanceOf('UrbanMonastics\SourceParser\SourceParser', $sameSourceParser);
-        $this->assertSame($SourceParser, $sameSourceParser);
+        $sameSourceTextParser = TestSourceTextParser::instance();
+        $this->assertInstanceOf('UrbanMonastics\SourceTextParser\SourceTextParser', $sameSourceTextParser);
+        $this->assertSame($SourceTextParser, $sameSourceTextParser);
 
-        $testSourceParser = TestSourceParser::instance('test late static binding');
-        $this->assertInstanceOf('TestSourceParser', $testSourceParser);
+        $testSourceTextParser = TestSourceTextParser::instance('test late static binding');
+        $this->assertInstanceOf('TestSourceTextParser', $testSourceTextParser);
 
-        $sameInstanceAgain = TestSourceParser::instance('test late static binding');
-        $this->assertSame($testSourceParser, $sameInstanceAgain);
+        $sameInstanceAgain = TestSourceTextParser::instance('test late static binding');
+        $this->assertSame($testSourceTextParser, $sameInstanceAgain);
     }
 }

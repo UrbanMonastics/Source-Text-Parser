@@ -2,7 +2,7 @@
 
 /***********
  *	
- *	SourceParser
+ *	Source Text Parser
  *	https://developers.urbanmonastic.org/
  *	
  *	© Paul Prins
@@ -12,9 +12,9 @@
  *	
  ***********/
 
-namespace UrbanMonastics\SourceParser\Models;
+namespace UrbanMonastics\SourceTextParser\Models;
 
-use UrbanMonastics\SourceParser\SourceText as SourceText;
+use UrbanMonastics\SourceTextParser\SourceText as SourceText;
 
 class Language{
 	/* -- Version Members -- */
@@ -50,52 +50,5 @@ class Language{
 		return $this;
 	}
 
-	/*
-	 *  Getters
-	 */
-	function getAbbreviation(){
-		return $this->Abbreviation;
-	}
-	function getTitle(){
-		return $this->Title;
-	}
-	function getFamily(){
-		return $this->Family;
-	}
-	function getStartDate(){
-		return $this->StartDate;
-	}
-	function getEndDate(){
-		return $this->EndDate;
-	}
-
-
-	/*
-	 * Setters
-	 */
-	function setAbbreviation( string $Abbreviation ){
-		$this->Abbreviation = $Abbreviation;
-
-		return $this;
-	}
-	function setTitle( string $Title ){
-		$this->Title = $Title;
-
-		return $this;
-	}
-	function setFamily( string $Family ){
-		$this->Family = strtolower( $Family );
-
-		return $this;
-	}
-	function setStartDate( int $StartDate ){
-		$this->StartDate = $StartDate;
-
-		return $this;
-	}
-	function setEndDate( int $EndDate ){
-		$this->EndDate = $EndDate;
-
-		return $this;
-	}
+	
 }

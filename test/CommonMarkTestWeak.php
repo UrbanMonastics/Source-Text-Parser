@@ -3,14 +3,14 @@
 require_once(__DIR__ . '/CommonMarkTestStrict.php');
 
 /**
- * Test SourceParser against the CommonMark spec, but less aggressive
+ * Test SourceTextParser against the CommonMark spec, but less aggressive
  *
  * The resulting HTML markup is cleaned up before comparison, so examples
  * which would normally fail due to actually invisible differences (e.g.
  * superfluous whitespaces), don't fail. However, cleanup relies on block
  * element detection. The detection doesn't work correctly when a element's
  * `display` CSS property is manipulated. According to that this test is only
- * a interim solution on SourceParser's way to full CommonMark compatibility.
+ * a interim solution on SourceTextParser's way to full CommonMark compatibility.
  *
  * @link http://commonmark.org/ CommonMark
  */
@@ -22,7 +22,7 @@ class CommonMarkTestWeak extends CommonMarkTestStrict
     {
         parent::setUp();
 
-        $textLevelElements = $this->SourceParser->getTextLevelElements();
+        $textLevelElements = $this->SourceTextParser->getTextLevelElements();
         array_walk($textLevelElements, function (&$element) {
             $element = preg_quote($element, '/');
         });
@@ -40,7 +40,7 @@ class CommonMarkTestWeak extends CommonMarkTestStrict
     {
         $expectedHtml = $this->cleanupHtml($expectedHtml);
 
-        $actualHtml = $this->SourceParser->text($markdown);
+        $actualHtml = $this->SourceTextParser->text($markdown);
         $actualHtml = $this->cleanupHtml($actualHtml);
 
         $this->assertEquals($expectedHtml, $actualHtml);
