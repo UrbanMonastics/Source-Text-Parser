@@ -24,6 +24,9 @@
     "require-dev": {
         "phpunit/phpunit": ">=4.8.35"
     },
+    "replace": {
+        "urbanmonastics/sourceparser": "*"
+    },
     "autoload": {
         "psr-4": {"UrbanMonastics\\SourceTextParser\\": ""},
         "exclude-from-classmap": [
