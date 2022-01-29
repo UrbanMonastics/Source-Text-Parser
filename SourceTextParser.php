@@ -1903,6 +1903,8 @@ class SourceTextParser{
 				$Elements[0]['attributes']['class'] = 'spacer';
 				unset( $Elements[1]['name'] );
 			}
+		}else if ( $Type == 'extra'){
+			return;	// We have not yet implemented this
 		}
 
 
