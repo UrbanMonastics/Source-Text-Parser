@@ -43,7 +43,7 @@ class SourceTextParser{
 	 * Format a line of text and return it
 	 *
 	 * @param  string	$Text		The text object provided by the source
-	 * @param  array	$$nonNestables		What elements should we not nest
+	 * @param  array	$nonNestables		What elements should we not nest
 	 * @return HTML
 	 */
 	public function line( $text, $nonNestables = array() ){
@@ -65,6 +65,7 @@ class SourceTextParser{
 	protected $suppressAlleluia = false;	// Do we remove the word Alleluia from the text
 	protected $AlleluiaTerm = 'Alleluia';	// What word do we look for as Alleluia
 	protected $smallCapsText = false;	// Do we convert all caps words into small caps words?
+	protected $smallCapMarkers = array(); //
 	protected $selahHTML = false;	// Do we wrap selah in HTML for fancy rendering
 	protected $SelahTerm = 'Selah';	// What word do we look for as Selah
 
@@ -1215,15 +1216,15 @@ class SourceTextParser{
 		 * Identify and wrap any small caps words (of at least three chars in a row)
 		 */
 		$SmallCapsMatches = array();
-		if( !isset( $this->SmallCapMarkers )){
-			$this->SmallCapMarkers = array();
+		if( !isset( $this->smallCapMarkers )){
+			$this->smallCapMarkers = array();
 		}
 		if( $this->smallCapsText && preg_match('/\b[A-Z]{3,}\b/', $text, $SmallCapsMatches ) ){
 			$SmallCapsMatches = array_unique( $SmallCapsMatches );
 
 			foreach( $SmallCapsMatches as $aMatch ){
-				if( !in_array( substr( $aMatch, 0, 1 ), $this->SmallCapMarkers ) ){
-					$this->SmallCapMarkers[] = strtoupper( substr( $aMatch, 0, 1) );
+				if( !in_array( substr( $aMatch, 0, 1 ), $this->smallCapMarkers ) ){
+					$this->smallCapMarkers[] = strtoupper( substr( $aMatch, 0, 1) );
 				}
 				if( stripos( $this->inlineMarkerList, substr( $aMatch, 0, 1 ) ) === false ){
 					$this->inlineMarkerList .= strtoupper( substr( $aMatch, 0, 1) );
@@ -1244,7 +1245,7 @@ class SourceTextParser{
 				&& strtolower( mb_substr( $excerpt, 0, strlen( $this->AlleluiaTerm ) ) ) == strtolower( $this->AlleluiaTerm ) ){
 				$marker = 'alleluia';
 			}
-			else if( $this->smallCapsText && in_array( $marker, $this->SmallCapMarkers ) ){
+			else if( $this->smallCapsText && in_array( $marker, $this->smallCapMarkers ) ){
 				$marker = 'smallcaps';
 			}
 
@@ -2203,6 +2204,7 @@ class SourceTextParser{
 			'element' => $Element,
 		);
 	}
+
 
 	protected function inlineOverUnderLine( $Excerpt ){
 		if( $this->liturgicalHTML ){
