@@ -129,6 +129,7 @@ class SourceTextParser{
 			'LiturgicalMidpoint',	// [*] This is the for denoting a mid-point in chanted texts.
 			'LiturgicalDagger',	// [t] This is the dagger/obelisk that indicates the current line continues below. Helpful with chanted texts with more than two lines. Rendered as † in non HTML [U+2020 or `&#8224;` or `&dagger;`].
 			'TextRed',	// [red]Text[/red]
+			'TextGray',	// [gray]Text[/gray]
 		),
 		'selah' => array('LiturgicalSelah'),
 		'alleluia' => array('LiturgicalSupressAlleluia'),
@@ -2159,6 +2160,36 @@ class SourceTextParser{
 		$remainder = $Excerpt['text'];
 
 		if( preg_match('/^\[red\]((.|\n)*?)\[\/red\]/', $remainder, $matches) ){
+			$extent += strlen($matches[0]);
+			$remainder = substr($remainder, $extent);
+			$Element['text'] = $matches[1];
+		}else{
+			return;
+		}
+
+
+		return array(
+			'extent' => $extent,
+			'element' => $Element,
+		);
+	}
+
+
+	protected function inlineTextGray( $Excerpt ){
+		$Element = array();	// This will simply strip the tags from rendering - as there is no direct way to render gray text
+		if( $this->liturgicalHTML ){
+			$Element = array(
+				'name' => 'span',
+				'attributes' => array(
+						'class' => 'color-gray',
+					),
+			);
+		}
+
+		$extent = 0;
+		$remainder = $Excerpt['text'];
+
+		if( preg_match('/^\[gray\]((.|\n)*?)\[\/gray\]/', $remainder, $matches) ){
 			$extent += strlen($matches[0]);
 			$remainder = substr($remainder, $extent);
 			$Element['text'] = $matches[1];
