@@ -18,7 +18,7 @@ class SourceTextParser{
 
 
 	// Establish the version of the library
-	const version = '0.4.2';
+	const version = '0.4.4';
 
 
 	/**
@@ -1777,7 +1777,7 @@ class SourceTextParser{
 
 	protected function blockLiturgicalIntercession( $Line, array $CurrentBlock = null ){
 		// [II], [IR], [I1], [I2], or [IXtra]
-		if (preg_match('/^\[\I(I|R|1|2|Xtra)\]/', $Line['text'], $matches)){
+		if (preg_match('/^\[I(I|R|1|2|Xtra)\]/', $Line['text'], $matches)){
 			$element = $matches[0];
 			$this->intercessionResponse = null;
 
@@ -1950,7 +1950,7 @@ class SourceTextParser{
 				}
 			}
 		}else if( $Type == 'extra'){
-			var_dump( $this->intercessionResponse );
+			//var_dump( $this->intercessionResponse );
 		}
 		
 
@@ -1958,7 +1958,7 @@ class SourceTextParser{
 	}
 
 	protected function blockLiturgicalIntercessionContinue($Line, array $CurrentBlock){
-		if (preg_match('/^\[\I(I|R|1|2|Xtra)\]/', $Line['text'], $matches)){
+		if (preg_match('/^\[I(I|R|1|2|Xtra)\]/', $Line['text'], $matches)){
 			$element = $matches[0];
 
 			++$CurrentBlock['data']['lines'];
