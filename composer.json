@@ -18,11 +18,11 @@
         }
     ],
     "require": {
-        "php": ">=7.0.0",
+        "php": ">=7.4",
         "ext-mbstring": "*"
     },
     "require-dev": {
-        "phpunit/phpunit": ">=4.8.35"
+        "phpunit/phpunit": "^6"
     },
     "replace": {
         "urbanmonastics/sourceparser": "*"
