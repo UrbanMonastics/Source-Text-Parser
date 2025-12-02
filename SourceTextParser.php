@@ -64,7 +64,8 @@ class SourceTextParser{
 	protected $liturgicalHTML = true;	// Do we wrap liturgical elements in HTML tags
 	protected $suppressAlleluia = false;	// Do we remove the word Alleluia from the text
 	protected $AlleluiaTerm = 'Alleluia';	// What word do we look for as Alleluia
-	protected $smallCapsText = false;	// Do we convert all caps words into small caps words?
+	protected $smallCapsText = '';	// Do we convert all caps words into small caps words?
+	protected $SmallCapMarkers = array();	// Holds the preg_match output for Small Caps Texts
 	protected $selahHTML = false;	// Do we wrap selah in HTML for fancy rendering
 	protected $SelahTerm = 'Selah';	// What word do we look for as Selah
 
@@ -218,8 +219,8 @@ class SourceTextParser{
 		return $this;
 	}
 
-	public function setSmallCapsText(bool $smallCapsText){
-		$this->smallCapsText = $smallCapsText;
+	public function setSmallCapsText(string $smallCapsText){
+		$this->smallCapsText = strtoupper( $smallCapsText );
 
 		return $this;
 	}
@@ -1217,7 +1218,8 @@ class SourceTextParser{
 		if( !isset( $this->SmallCapMarkers )){
 			$this->SmallCapMarkers = array();
 		}
-		if( $this->smallCapsText && preg_match('/\b[A-Z]{3,}\b/', $text, $SmallCapsMatches ) ){
+
+		if( !empty( $this->smallCapsText ) && preg_match('/\b'. $this->smallCapsText .'\b/', $text, $SmallCapsMatches ) ){
 			$SmallCapsMatches = array_unique( $SmallCapsMatches );
 
 			foreach( $SmallCapsMatches as $aMatch ){
@@ -1243,7 +1245,7 @@ class SourceTextParser{
 				&& strtolower( mb_substr( $excerpt, 0, strlen( $this->AlleluiaTerm ) ) ) == strtolower( $this->AlleluiaTerm ) ){
 				$marker = 'alleluia';
 			}
-			else if( $this->smallCapsText && in_array( $marker, $this->SmallCapMarkers ) ){
+			else if( !empty( $this->smallCapsText ) && in_array( $marker, $this->SmallCapMarkers ) ){
 				$marker = 'smallcaps';
 			}
 
@@ -2100,7 +2102,7 @@ class SourceTextParser{
 	}
 
 	protected function inlineLiturgicalSmallCaps( $Excerpt ){
-		if( !$this->smallCapsText ){
+		if( empty( $this->smallCapsText ) ){
 			return;	// Small Caps is disabled matches found
 		}
 
