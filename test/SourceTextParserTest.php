@@ -62,7 +62,9 @@ class SourceTextParserTest extends TestCase
 		if( stripos( $test, 'selah_termed' ) !== false ){
 	        $this->SourceTextParser->setSelahHTML( true, 'OtherSelah'  );
 		}
-        $this->SourceTextParser->setSmallCapsText( stripos( $test, 'small_caps' ) !== false );
+        if( stripos( $test, 'small_caps' ) !== false  ){
+            $this->SourceTextParser->setSmallCapsText('lord');
+        }
         $this->SourceTextParser->setSuppressAlleluia( stripos( $test, 'supress_alleluia' ) !== false, 'Alleluia' );
 		if( stripos( $test, 'supress_alleluia_termed' ) !== false ){
 	        $this->SourceTextParser->setSuppressAlleluia( stripos( $test, 'supress_alleluia' ) !== false, 'OtherAlleluia' );
