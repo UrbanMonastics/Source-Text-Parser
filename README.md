@@ -159,5 +159,20 @@ To make it easier to develop and build out the SourceTextParser we have setup a 
 
 In addition we have linked the NGNIX access and error logs to files in the docker directory. This can prove helpful when trouble shooting.
 
-	docker/nginx/access.log
-	docker/nginx/error.log
+You can make a simple `index.php` file and access it at http://localhost:8080/
+
+### A Sample index.php
+
+```php
+<?php
+
+require_once __DIR__ . '/vendor/autoload.php';
+$SourceTextParser = new UrbanMonastics\SourceTextParser\SourceTextParser();
+$SourceTextParser->setBreaksEnabled( true );
+
+$input = file_get_contents( __DIR__ . '/test/data/SOURCE_FILE.md' );
+echo $SourceTextParser->text($input);
+exit();
+
+?>
+```
