@@ -1,4 +1,4 @@
-FROM richarvey/nginx-php-fpm:1.10.3
+FROM richarvey/nginx-php-fpm:3.1.6
 
 COPY . .
 
@@ -11,8 +11,5 @@ ENV REAL_IP_HEADER 1
 
 # Allow composer to run as root
 ENV COMPOSER_ALLOW_SUPERUSER 1
-
-# Update composer to version 2.x
-RUN composer selfupdate --2
 
 CMD ["/start.sh"]
