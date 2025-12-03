@@ -23,7 +23,7 @@ The source texts use a subset of the Markdown functionality, and include some ad
 *	Including inline red letter text.  
 *	Supports overlined text for more robust manuscript support.  
 *	[GitHub flavored](https://github.github.com/gfm)  
-*	[Tested](http://parsedown.org/tests/) in 7.0 to 8.0
+*	[Tested](http://parsedown.org/tests/) in 8.1 to 8.4
 
 ## Extending Markdown  
 To ensure that we can support additional elements. These extensions are broken into inline or block level markings.
