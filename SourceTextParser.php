@@ -217,10 +217,10 @@ class SourceTextParser{
 		return $this;
 	}
 
-	public function setSuppressAlleluia(bool $suppressAlleluia, string $AlleluiaTerm = NULL ){
+	public function setSuppressAlleluia(bool $suppressAlleluia, string $AlleluiaTerm ){
 		$this->suppressAlleluia = $suppressAlleluia;
 
-		if( !is_null( $AlleluiaTerm ) )
+		if( !empty( $AlleluiaTerm ) )
 			$this->AlleluiaTerm = $AlleluiaTerm;
 
 		return $this;
@@ -232,10 +232,10 @@ class SourceTextParser{
 		return $this;
 	}
 
-	public function setSelahHTML(bool $selahHTML, string $SelahTerm = NULL ){
+	public function setSelahHTML(bool $selahHTML, string $SelahTerm ){
 		$this->selahHTML = $selahHTML;
 
-		if( !is_null( $SelahTerm ) )
+		if( !empty( $SelahTerm ) )
 			$this->SelahTerm = $SelahTerm;
 
 		return $this;
