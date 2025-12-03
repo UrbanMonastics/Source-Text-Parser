@@ -3,3 +3,4 @@ vendor/
 *.DS_Store
 cache.json
 .phpunit.result.cache
+index.php
