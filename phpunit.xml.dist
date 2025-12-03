@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="vendor/autoload.php"
+         colors="true"
+         processIsolation="false"
+         stopOnFailure="false">
+	<testsuites>
+        <testsuite name="urbanmonastics/sourcetextparser unit tests">
+			<file>test/SourTextParserTest.php</file>
+		</testsuite>
+	</testsuites>
+</phpunit>
