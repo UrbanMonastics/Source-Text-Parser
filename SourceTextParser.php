@@ -1645,7 +1645,7 @@ class SourceTextParser{
 		// [V] or [R] 
 		if (preg_match('/^\[[V|R]\]/', $Line['text'], $matches)){
 			$element = $matches[0];
-			$this->responsoryResponse = array('PreviousLine' => NULL, 'ResponseNode' => NULL);
+			$this->responsoryResponse = array('PreviousLine' => NULL, 'FinalResponse' => NULL, 'MiddleResponse' => NULL);
 
 			if( stripos( $element, 'V') !== false ){
 				$Type = 'versicle';
@@ -1698,10 +1698,16 @@ class SourceTextParser{
 					),
 			);
 
-
 			$this->responsoryResponse['PreviousLine'] = $Type;
-			if( $Type == 'response' )
-				$this->responsoryResponse['ResponseNode'] = $TempNode;
+			if( $Type == 'response' ){
+				$this->responsoryResponse['FinalResponse'] = $TempNode;
+
+
+				if( $TempNode ){
+					$this->responsoryResponse['MiddleResponse'] = 'ZYS';
+				}
+			}
+
 
 			return $Block;
 		}
@@ -1719,9 +1725,11 @@ class SourceTextParser{
 
 
 			// Place the Response before this line if it was not included previously
-			if( !is_null( $this->responsoryResponse['ResponseNode'] ) && $Type == 'versicle' && $this->responsoryResponse['PreviousLine'] == 'versicle'){
-				
-				$CurrentBlock['element']['elements'][] = $this->responsoryResponse['ResponseNode'];
+			if( !is_null( $this->responsoryResponse['FinalResponse'] ) && $Type == 'versicle' && $this->responsoryResponse['PreviousLine'] == 'versicle'){
+				if( !is_null( $this->responsoryResponse['MiddleResponse'] ))
+					$CurrentBlock['element']['elements'][] = $this->responsoryResponse['MiddleResponse'];
+				else
+					$CurrentBlock['element']['elements'][] = $this->responsoryResponse['FinalResponse'];
 			}
 
 
@@ -1754,10 +1762,17 @@ class SourceTextParser{
 					),
 			);
 
-
 			$this->responsoryResponse['PreviousLine'] = $Type;
-			if( $Type == 'response' )
-				$this->responsoryResponse['ResponseNode'] = $TempNode;
+			if( $Type == 'response' ){
+				$this->responsoryResponse['FinalResponse'] = $TempNode;
+
+				if( strpos( $Text, '[*]') !== false ){
+					$TempNode['elements'][1]['handler']['argument'] = '  ' . trim( substr( $Text, strpos( $Text, '[*]') + 3 ) );
+					$this->responsoryResponse['MiddleResponse'] = $TempNode;
+				}
+
+				
+			}
 
 			return $CurrentBlock;
 		}
@@ -1766,8 +1781,8 @@ class SourceTextParser{
 
 	protected function blockLiturgicalResponseComplete(array $CurrentBlock){
 		// Remove the trailing <br> from the non-HTML version
-		if( !is_null( $this->responsoryResponse['ResponseNode'] ) && $this->responsoryResponse['PreviousLine'] == 'versicle'){
-			$CurrentBlock['element']['elements'][] = $this->responsoryResponse['ResponseNode'];
+		if( !is_null( $this->responsoryResponse['FinalResponse'] ) && $this->responsoryResponse['PreviousLine'] == 'versicle'){
+			$CurrentBlock['element']['elements'][] = $this->responsoryResponse['FinalResponse'];
 		}
 
 		return $CurrentBlock;
