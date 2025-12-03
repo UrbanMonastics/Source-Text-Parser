@@ -1,5 +1,5 @@
 Lord, [+] open my lips.[*]  
-And my mouth will declair your praise.
+And my mouth will declare your praise.
 
 
 To this you were called,[t]  

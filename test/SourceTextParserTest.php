@@ -7,26 +7,16 @@ use UrbanMonastics\SourceTextParser\SourceTextParser as SourceTextParser;
 
 class SourceTextParserTest extends TestCase
 {
+    protected $SourceTextParser;
+
+
     final function __construct($name = null, array $data = array(), $dataName = '')
     {
-        $this->dirs = $this->initDirs();
         $this->SourceTextParser = $this->initSourceTextParser();
 
         parent::__construct($name, $data, $dataName);
     }
 
-    private $dirs;
-    protected $SourceTextParser;
-
-    /**
-     * @return array
-     */
-    protected function initDirs()
-    {
-        $dirs []= dirname(__FILE__).'/data/';
-
-        return $dirs;
-    }
 
     /**
      * @return SourceTextParser
@@ -62,10 +52,17 @@ class SourceTextParserTest extends TestCase
 		if( stripos( $test, 'selah_termed' ) !== false ){
 	        $this->SourceTextParser->setSelahHTML( true, 'OtherSelah'  );
 		}
-        $this->SourceTextParser->setSmallCapsText( stripos( $test, 'small_caps' ) !== false );
+        if( stripos( $test, 'small_caps' ) !== false  ){
+            $this->SourceTextParser->setSmallCapsText('lord');  // Case insensitive
+        }
         $this->SourceTextParser->setSuppressAlleluia( stripos( $test, 'supress_alleluia' ) !== false, 'Alleluia' );
 		if( stripos( $test, 'supress_alleluia_termed' ) !== false ){
 	        $this->SourceTextParser->setSuppressAlleluia( stripos( $test, 'supress_alleluia' ) !== false, 'OtherAlleluia' );
+		}
+
+		if( stripos( $test, 'wrap_lines' ) !== false ){
+	        $this->SourceTextParser->setWrapLines( true );
+            $this->SourceTextParser->setPreserveIndentations( true );
 		}
 
         $actualMarkup = $this->SourceTextParser->text( $markdown );
@@ -107,11 +104,12 @@ class SourceTextParserTest extends TestCase
         $this->assertEquals($expectedSafeMarkup, $actualSafeMarkup);
     }
 
-    function data()
+    public static function data()
     {
         $data = array();
+        $dirs = array(dirname(__FILE__).'/data/');
 
-        foreach ($this->dirs as $dir)
+        foreach ($dirs as $dir)
         {
             $Folder = new DirectoryIterator($dir);
 

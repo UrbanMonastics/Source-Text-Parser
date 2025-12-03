@@ -15,10 +15,8 @@
 namespace UrbanMonastics\SourceTextParser;
 
 class SourceTextParser{
-
-
 	// Establish the version of the library
-	const version = '0.4.4';
+	const version = '1.0';
 
 
 	/**
@@ -59,12 +57,14 @@ class SourceTextParser{
 	protected $urlsLinked = true;		// Convert any URL into a link
 	protected $safeMode = false;	// How strict are we about raw HTML code
 	protected $strictMode;
-	protected $preserveIndentations = false;	// Do we add spacers to perserve indentations
+	protected $preserveIndentations = false;	// Do we add spacers to preserve indentations
+	protected $wrapLines = false;	// Do we wrap every line in a Div with supporting class attributes?
 	protected $liturgicalElements = true;	// Look for liturgical elements in the text
 	protected $liturgicalHTML = true;	// Do we wrap liturgical elements in HTML tags
 	protected $suppressAlleluia = false;	// Do we remove the word Alleluia from the text
 	protected $AlleluiaTerm = 'Alleluia';	// What word do we look for as Alleluia
-	protected $smallCapsText = false;	// Do we convert all caps words into small caps words?
+	protected $smallCapsText = '';	// Do we convert all caps words into small caps words?
+	protected $SmallCapMarkers = array();	// Holds the preg_match output for Small Caps Texts
 	protected $selahHTML = false;	// Do we wrap selah in HTML for fancy rendering
 	protected $SelahTerm = 'Selah';	// What word do we look for as Selah
 
@@ -197,6 +197,12 @@ class SourceTextParser{
 		return $this;
 	}
 
+	public function setWrapLines( bool $wrapLines ){
+		$this->wrapLines = $wrapLines;
+
+		return $this;
+	}
+
 	public function setLiturgicalElements(bool $liturgicalElements){
 		$this->liturgicalElements = $liturgicalElements;
 
@@ -209,25 +215,25 @@ class SourceTextParser{
 		return $this;
 	}
 
-	public function setSuppressAlleluia(bool $suppressAlleluia, string $AlleluiaTerm = NULL ){
+	public function setSuppressAlleluia(bool $suppressAlleluia, string $AlleluiaTerm ){
 		$this->suppressAlleluia = $suppressAlleluia;
 
-		if( !is_null( $AlleluiaTerm ) )
+		if( !empty( $AlleluiaTerm ) )
 			$this->AlleluiaTerm = $AlleluiaTerm;
 
 		return $this;
 	}
 
-	public function setSmallCapsText(bool $smallCapsText){
-		$this->smallCapsText = $smallCapsText;
+	public function setSmallCapsText(string $smallCapsText){
+		$this->smallCapsText = strtoupper( $smallCapsText );
 
 		return $this;
 	}
 
-	public function setSelahHTML(bool $selahHTML, string $SelahTerm = NULL ){
+	public function setSelahHTML(bool $selahHTML, string $SelahTerm ){
 		$this->selahHTML = $selahHTML;
 
-		if( !is_null( $SelahTerm ) )
+		if( !empty( $SelahTerm ) )
 			$this->SelahTerm = $SelahTerm;
 
 		return $this;
@@ -331,6 +337,10 @@ class SourceTextParser{
 					if( $tabs >= 2 && $this->liturgicalHTML ){
 						$text = '<span class="spacer-tab-x2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>' . $text;
 						$tabs = $tabs - 2;
+
+						if( $this->wrapLines ){
+							$text = '/t' . $text;	// Adding this back so we can properly style this line later
+						}
 					}else{
 						if( $this->liturgicalHTML )
 							$text = '<span class="spacer-tab">&nbsp;&nbsp;&nbsp;&nbsp;</span>' . $text;
@@ -338,6 +348,10 @@ class SourceTextParser{
 							$text = '&nbsp;&nbsp;&nbsp;&nbsp;' . $text;
 
 						--$tabs;
+					}
+
+					if( $this->wrapLines ){
+						$text = '/t' . $text;	// Adding this back so we can properly style this line later
 					}
 				}
 				while( $tabs > 0 );
@@ -449,6 +463,46 @@ class SourceTextParser{
 		}
 
 		# ~
+
+
+		/*
+		* Re-wrap text in Div tags
+		*/
+		if( $this->wrapLines ){
+			$CurrentElements = $Elements;
+			$Elements = array();
+			foreach( $CurrentElements as $paragraph ){
+				$lines = explode("\n", $paragraph['handler']['argument'] );
+				foreach( $lines as $i => $line ){
+					$lineClass = $lineAttributes = array();
+					if ( $i == 0 )
+						$lineClass[] = 'paragraph-start';
+					if( $i+1 == count( $lines ) )	
+						$lineClass[] = 'paragraph-end';
+
+					if( stripos( $line, '/t/t' ) === 0 ){
+						$line = substr( $line, 4 );
+						$lineClass[] = 'indent-x2';
+					}
+					if( stripos( $line, '/t' ) === 0 ){
+						$line = substr( $line, 2 );
+						$lineClass[] = 'indent';
+					}
+
+					if( !empty( $lineClass ) )
+					$lineAttributes = array('class' => implode(' ', $lineClass));
+
+					$Elements[] = array('name' => 'div',
+									'attributes' => $lineAttributes,
+									'handler' => array(
+										'function' => 'lineElements',
+										'destination' => 'elements',
+										'argument' => $line
+									)
+								);
+				} // End: foreach($lines)
+			} // End: foreach($CurrentElements)
+		} // End: if($this->wrapLines)
 
 		return $Elements;
 	}
@@ -1217,7 +1271,8 @@ class SourceTextParser{
 		if( !isset( $this->SmallCapMarkers )){
 			$this->SmallCapMarkers = array();
 		}
-		if( $this->smallCapsText && preg_match('/\b[A-Z]{3,}\b/', $text, $SmallCapsMatches ) ){
+
+		if( !empty( $this->smallCapsText ) && preg_match('/\b'. $this->smallCapsText .'\b/', $text, $SmallCapsMatches ) ){
 			$SmallCapsMatches = array_unique( $SmallCapsMatches );
 
 			foreach( $SmallCapsMatches as $aMatch ){
@@ -1243,7 +1298,7 @@ class SourceTextParser{
 				&& strtolower( mb_substr( $excerpt, 0, strlen( $this->AlleluiaTerm ) ) ) == strtolower( $this->AlleluiaTerm ) ){
 				$marker = 'alleluia';
 			}
-			else if( $this->smallCapsText && in_array( $marker, $this->SmallCapMarkers ) ){
+			else if( !empty( $this->smallCapsText ) && in_array( $marker, $this->SmallCapMarkers ) ){
 				$marker = 'smallcaps';
 			}
 
@@ -1643,7 +1698,7 @@ class SourceTextParser{
 		// [V] or [R] 
 		if (preg_match('/^\[[V|R]\]/', $Line['text'], $matches)){
 			$element = $matches[0];
-			$this->responsoryResponse = array('PreviousLine' => NULL, 'ResponseNode' => NULL);
+			$this->responsoryResponse = array('PreviousLine' => NULL, 'FinalResponse' => NULL, 'MiddleResponse' => NULL);
 
 			if( stripos( $element, 'V') !== false ){
 				$Type = 'versicle';
@@ -1696,10 +1751,16 @@ class SourceTextParser{
 					),
 			);
 
-
 			$this->responsoryResponse['PreviousLine'] = $Type;
-			if( $Type == 'response' )
-				$this->responsoryResponse['ResponseNode'] = $TempNode;
+			if( $Type == 'response' ){
+				$this->responsoryResponse['FinalResponse'] = $TempNode;
+
+
+				if( $TempNode ){
+					$this->responsoryResponse['MiddleResponse'] = 'ZYS';
+				}
+			}
+
 
 			return $Block;
 		}
@@ -1717,9 +1778,11 @@ class SourceTextParser{
 
 
 			// Place the Response before this line if it was not included previously
-			if( !is_null( $this->responsoryResponse['ResponseNode'] ) && $Type == 'versicle' && $this->responsoryResponse['PreviousLine'] == 'versicle'){
-				
-				$CurrentBlock['element']['elements'][] = $this->responsoryResponse['ResponseNode'];
+			if( !is_null( $this->responsoryResponse['FinalResponse'] ) && $Type == 'versicle' && $this->responsoryResponse['PreviousLine'] == 'versicle'){
+				if( !is_null( $this->responsoryResponse['MiddleResponse'] ))
+					$CurrentBlock['element']['elements'][] = $this->responsoryResponse['MiddleResponse'];
+				else
+					$CurrentBlock['element']['elements'][] = $this->responsoryResponse['FinalResponse'];
 			}
 
 
@@ -1752,10 +1815,17 @@ class SourceTextParser{
 					),
 			);
 
-
 			$this->responsoryResponse['PreviousLine'] = $Type;
-			if( $Type == 'response' )
-				$this->responsoryResponse['ResponseNode'] = $TempNode;
+			if( $Type == 'response' ){
+				$this->responsoryResponse['FinalResponse'] = $TempNode;
+
+				if( strpos( $Text, '[*]') !== false ){
+					$TempNode['elements'][1]['handler']['argument'] = '  ' . trim( substr( $Text, strpos( $Text, '[*]') + 3 ) );
+					$this->responsoryResponse['MiddleResponse'] = $TempNode;
+				}
+
+				
+			}
 
 			return $CurrentBlock;
 		}
@@ -1764,8 +1834,8 @@ class SourceTextParser{
 
 	protected function blockLiturgicalResponseComplete(array $CurrentBlock){
 		// Remove the trailing <br> from the non-HTML version
-		if( !is_null( $this->responsoryResponse['ResponseNode'] ) && $this->responsoryResponse['PreviousLine'] == 'versicle'){
-			$CurrentBlock['element']['elements'][] = $this->responsoryResponse['ResponseNode'];
+		if( !is_null( $this->responsoryResponse['FinalResponse'] ) && $this->responsoryResponse['PreviousLine'] == 'versicle'){
+			$CurrentBlock['element']['elements'][] = $this->responsoryResponse['FinalResponse'];
 		}
 
 		return $CurrentBlock;
@@ -2100,7 +2170,7 @@ class SourceTextParser{
 	}
 
 	protected function inlineLiturgicalSmallCaps( $Excerpt ){
-		if( !$this->smallCapsText ){
+		if( empty( $this->smallCapsText ) ){
 			return;	// Small Caps is disabled matches found
 		}
 
