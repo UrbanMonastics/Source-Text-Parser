@@ -11,4 +11,4 @@ Offer your righteous sacrifices, [*]
 Many are asking, "Who can show us anything good?" [*]
 	LORD, let the light of your face shine upon us!
 
-EXCLUde thESE wORDS
+EXCLUde this version of Lord and thESE wORDS
