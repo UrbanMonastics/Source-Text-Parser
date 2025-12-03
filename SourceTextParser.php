@@ -15,10 +15,8 @@
 namespace UrbanMonastics\SourceTextParser;
 
 class SourceTextParser{
-
-
 	// Establish the version of the library
-	const version = '0.4.4';
+	const version = '1.0';
 
 
 	/**
