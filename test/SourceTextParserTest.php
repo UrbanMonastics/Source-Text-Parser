@@ -63,11 +63,16 @@ class SourceTextParserTest extends TestCase
 	        $this->SourceTextParser->setSelahHTML( true, 'OtherSelah'  );
 		}
         if( stripos( $test, 'small_caps' ) !== false  ){
-            $this->SourceTextParser->setSmallCapsText('lord');
+            $this->SourceTextParser->setSmallCapsText('lord');  // Case insensitive
         }
         $this->SourceTextParser->setSuppressAlleluia( stripos( $test, 'supress_alleluia' ) !== false, 'Alleluia' );
 		if( stripos( $test, 'supress_alleluia_termed' ) !== false ){
 	        $this->SourceTextParser->setSuppressAlleluia( stripos( $test, 'supress_alleluia' ) !== false, 'OtherAlleluia' );
+		}
+
+		if( stripos( $test, 'wrap_lines' ) !== false ){
+	        $this->SourceTextParser->setWrapLines( true );
+            $this->SourceTextParser->setPreserveIndentations( true );
 		}
 
         $actualMarkup = $this->SourceTextParser->text( $markdown );

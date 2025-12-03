@@ -59,7 +59,8 @@ class SourceTextParser{
 	protected $urlsLinked = true;		// Convert any URL into a link
 	protected $safeMode = false;	// How strict are we about raw HTML code
 	protected $strictMode;
-	protected $preserveIndentations = false;	// Do we add spacers to perserve indentations
+	protected $preserveIndentations = false;	// Do we add spacers to preserve indentations
+	protected $wrapLines = false;	// Do we wrap every line in a Div with supporting class attributes?
 	protected $liturgicalElements = true;	// Look for liturgical elements in the text
 	protected $liturgicalHTML = true;	// Do we wrap liturgical elements in HTML tags
 	protected $suppressAlleluia = false;	// Do we remove the word Alleluia from the text
@@ -198,6 +199,12 @@ class SourceTextParser{
 		return $this;
 	}
 
+	public function setWrapLines( bool $wrapLines ){
+		$this->wrapLines = $wrapLines;
+
+		return $this;
+	}
+
 	public function setLiturgicalElements(bool $liturgicalElements){
 		$this->liturgicalElements = $liturgicalElements;
 
@@ -332,6 +339,10 @@ class SourceTextParser{
 					if( $tabs >= 2 && $this->liturgicalHTML ){
 						$text = '<span class="spacer-tab-x2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>' . $text;
 						$tabs = $tabs - 2;
+
+						if( $this->wrapLines ){
+							$text = '/t' . $text;	// Adding this back so we can properly style this line later
+						}
 					}else{
 						if( $this->liturgicalHTML )
 							$text = '<span class="spacer-tab">&nbsp;&nbsp;&nbsp;&nbsp;</span>' . $text;
@@ -339,6 +350,10 @@ class SourceTextParser{
 							$text = '&nbsp;&nbsp;&nbsp;&nbsp;' . $text;
 
 						--$tabs;
+					}
+
+					if( $this->wrapLines ){
+						$text = '/t' . $text;	// Adding this back so we can properly style this line later
 					}
 				}
 				while( $tabs > 0 );
@@ -450,6 +465,46 @@ class SourceTextParser{
 		}
 
 		# ~
+
+
+		/*
+		* Re-wrap text in Div tags
+		*/
+		if( $this->wrapLines ){
+			$CurrentElements = $Elements;
+			$Elements = array();
+			foreach( $CurrentElements as $paragraph ){
+				$lines = explode("\n", $paragraph['handler']['argument'] );
+				foreach( $lines as $i => $line ){
+					$lineClass = $lineAttributes = array();
+					if ( $i == 0 )
+						$lineClass[] = 'paragraph-start';
+					if( $i+1 == count( $lines ) )	
+						$lineClass[] = 'paragraph-end';
+
+					if( stripos( $line, '/t/t' ) === 0 ){
+						$line = substr( $line, 4 );
+						$lineClass[] = 'indent-x2';
+					}
+					if( stripos( $line, '/t' ) === 0 ){
+						$line = substr( $line, 2 );
+						$lineClass[] = 'indent';
+					}
+
+					if( !empty( $lineClass ) )
+					$lineAttributes = array('class' => implode(' ', $lineClass));
+
+					$Elements[] = array('name' => 'div',
+									'attributes' => $lineAttributes,
+									'handler' => array(
+										'function' => 'lineElements',
+										'destination' => 'elements',
+										'argument' => $line
+									)
+								);
+				} // End: foreach($lines)
+			} // End: foreach($CurrentElements)
+		} // End: if($this->wrapLines)
 
 		return $Elements;
 	}
