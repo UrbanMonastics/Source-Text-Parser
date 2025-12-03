@@ -107,6 +107,8 @@ These texts may need to be used in various formats and contexts. There are going
 	When enabled it will convert inline URL strings into clickable links.
 *	**setPreserveIndentations( *bool* )** default: false  
 	When enabled this will convert any tabs (set of 4 spaces) into four double spaces wrapped in a span. Enabling this will disable tabbing for code blocks.
+*	**setWrapLines( *bool* )** default: false  
+	When enabled this will wrap every line in a `div` tag, including classes for `paragraph-start`, `paragraph-end` and `indent`. Can be helpful when rendering poetry and scripture.
 *	**setLiturgicalElements( *bool* )** default: true  
 	When enabled the standard Markdown will be supplemented with liturgical elements. See Extending Markdown above for additions
 *	**setLiturgicalHTML( *bool* )** default: true  
