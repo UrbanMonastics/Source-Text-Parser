@@ -2176,9 +2176,9 @@ class SourceTextParser{
 
 		// Place the matches into this array
 		$SmallCapsMatches = array();
-		preg_match('/\b[A-Z]{3,}\b/', $Excerpt['text'], $SmallCapsMatches );
-		if( empty( $SmallCapsMatches ) ){
-			return;	// No matches found
+		preg_match('/\b'. $this->smallCapsText .'\b/', $Excerpt['text'], $SmallCapsMatches );
+		if( empty( $SmallCapsMatches ) || stripos( $Excerpt['text'], $this->smallCapsText ) !== 0 ){
+			return;	// No matches found or the match is not at the start of the text
 		}
 
 

@@ -54,6 +54,10 @@ class SourceTextParserTest extends TestCase
 		}
         if( stripos( $test, 'small_caps' ) !== false  ){
             $this->SourceTextParser->setSmallCapsText('lord');  // Case insensitive
+
+            if( stripos( $test, 'small_caps_fr' ) !== false  ){
+                $this->SourceTextParser->setSmallCapsText('seigneur');  // French!
+            }
         }
         $this->SourceTextParser->setSuppressAlleluia( stripos( $test, 'supress_alleluia' ) !== false, 'Alleluia' );
 		if( stripos( $test, 'supress_alleluia_termed' ) !== false ){
