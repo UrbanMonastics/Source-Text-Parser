@@ -17,9 +17,9 @@ The source texts use a subset of the Markdown functionality, and include some ad
 	*	Including Versicals  
 	*	Including inline Crosses, Pauses, and Daggers  
 	*	Including Intercessory prayers. With an introduction, response, and two part intentions  
-	*	Including Small Caps of words over 3 characters [enable seperate]  
-	*	Including wrapping the term Selah for custom styling  [enable seperate]  
-	*	Including suppression of the term Alleluia (definable in your language) [enable seperate]  
+	*	Including Small Caps for a word of your choosing when present capitalized [enable separate]  
+	*	Including wrapping the term Selah for custom styling  [enable separate]  
+	*	Including suppression of the term Alleluia (definable in your language) [enable separate]  
 *	Including inline red letter text.  
 *	Supports overlined text for more robust manuscript support.  
 *	[GitHub flavored](https://github.github.com/gfm)  
@@ -34,6 +34,7 @@ These can be placed anywhere within the texts. Since there are not standard ways
 *	\_underline\_		Make the encased text underlined. Note that we disable the ability for bold or italic using underscores in order to support underlining texts. (not supported by Github)  
 *	‾over line‾		Make the encased text over-lined. Only supported in HTML formatting. (not supported by Github)  
 *	\_‾under and over line‾\_		Make the encased text both underlined and over-lined. Only supported in HTML formatting, in other outputs will show as underlined. (not supported by Github)  
+*	--- and --	These will be replaced by em and en dashes respectively. They will only work when surrounded by spaces, or characters and not at the beginning or end of a line. (not supported by Github)  
 *	[red]red text[/red]		Make the encased text red. Output is `<span class="color-red">red text</span>` only when *LiturgicalElements* is enabled otherwise it is simply stripped.  
 *	[+]		This will insert the symbol to prompt the reader to cross themselves. Rendered as ✛ in non HTML [U+271B or `&#10011;`].
 *	[*]		This is the for denoting a mid-point in chanted texts.  

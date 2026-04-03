@@ -108,7 +108,7 @@ class SourceTextParser{
 	);
 
 
-	protected $inlineMarkerList = '!*_&[:<`~\\';
+	protected $inlineMarkerList = '!*_-&[:<`~\\';
 	protected $InlineTypes = array(
 		'!' => array('Image'),
 		'&' => array('SpecialCharacter'),
@@ -117,6 +117,7 @@ class SourceTextParser{
 		'<' => array('UrlTag', 'EmailTag', 'Markup'),
 		'[' => array('Link'),
 		'_' => array(),
+		'-' => array('Dashes'),
 		'`' => array('Code'),
 		'~' => array('Strikethrough'),
 		'\\' => array('EscapeSequence'),
@@ -1416,6 +1417,30 @@ class SourceTextParser{
 					'name' => 'code',
 					'text' => $text,
 				),
+			);
+		}
+	}
+
+	protected function inlineDashes($Excerpt){
+		if( $Excerpt['text'] == $Excerpt['context'] 
+			|| preg_match('/^(-{4,}|—|–)/', $Excerpt['text'] )
+			|| preg_match('/((?!^)[\w\s])(-{2,3}|—|–)([\w\s](?!$))/', $Excerpt['context'] ) === 0 ){
+			return;
+		}
+var_dump( $Excerpt['context'] );
+		// Find longer EM Dash (three dashes in a row).
+		if (substr($Excerpt['text'], 1, 1) !== ' ' && strpos( $Excerpt['text'], '---') !== false && preg_match('/^(-{3,3}|—|–)/', $Excerpt['text'], $matches) ){
+			return array(
+				'element' => array('rawHtml' => '&mdash;'),
+				'extent' => strlen($matches[0]),
+			);
+		}
+
+		// Find shorter EN Dash (two dashes in a row).
+		if (substr($Excerpt['text'], 1, 1) !== ' ' && strpos( $Excerpt['text'], '--') !== false && preg_match('/^(-{2,2}|—|–)/', $Excerpt['text'], $matches) ){
+			return array(
+				'element' => array('rawHtml' => '&ndash;'),
+				'extent' => strlen($matches[0]),
 			);
 		}
 	}
