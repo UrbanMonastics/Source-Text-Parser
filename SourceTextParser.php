@@ -231,7 +231,7 @@ class SourceTextParser{
 		return $this;
 	}
 
-	public function setSelahHTML(bool $selahHTML, string $SelahTerm ){
+	public function setSelahHTML(bool $selahHTML, string $SelahTerm = 'selah' ){
 		$this->selahHTML = $selahHTML;
 
 		if( !empty( $SelahTerm ) )
@@ -488,6 +488,11 @@ class SourceTextParser{
 					if( stripos( $line, '/t' ) === 0 ){
 						$line = substr( $line, 2 );
 						$lineClass[] = 'indent';
+					}
+
+					if(  $this->selahHTML && stripos($line, $this->SelahTerm) === 0){
+						$lineClass[] = 'selah-block';
+						$line = $this->SelahTerm;
 					}
 
 					if( !empty( $lineClass ) )
@@ -2169,7 +2174,7 @@ var_dump( $Excerpt['context'] );
 	}
 
 	protected function inlineLiturgicalSelah( $Excerpt ){
-		if( !$this->selahHTML ){
+		if( !$this->selahHTML || $this->wrapLines ){
 			return;
 		}
 
