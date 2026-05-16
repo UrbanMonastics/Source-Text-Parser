@@ -16,7 +16,7 @@ namespace UrbanMonastics\SourceTextParser;
 
 class SourceTextParser{
 	// Establish the version of the library
-	const version = '1.1.1';
+	const version = '1.1.2';
 
 
 	/**
@@ -1432,7 +1432,7 @@ class SourceTextParser{
 			|| preg_match('/((?!^)[\w\s])(-{2,3}|—|–)([\w\s](?!$))/', $Excerpt['context'] ) === 0 ){
 			return;
 		}
-var_dump( $Excerpt['context'] );
+
 		// Find longer EM Dash (three dashes in a row).
 		if (substr($Excerpt['text'], 1, 1) !== ' ' && strpos( $Excerpt['text'], '---') !== false && preg_match('/^(-{3,3}|—|–)/', $Excerpt['text'], $matches) ){
 			return array(
